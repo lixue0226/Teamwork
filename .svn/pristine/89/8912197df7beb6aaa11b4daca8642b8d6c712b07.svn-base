@@ -1,0 +1,139 @@
+package com.ewaytek.model.pojo;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_evaluation database table.
+ * 
+ */
+public class StaffEvaluationEx implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int depId;
+	private int adjust;
+	private int comment;
+	private int democracy;
+	private int dfinal;
+	private int isRecommend;
+	private int year;
+	private int type;
+	private int staId;
+	private String staName;
+
+	public StaffEvaluationEx(
+		int id,
+		int depId,
+		int adjust,
+		int comment,
+		int democracy,
+		int dfinal,
+		int isRecommend,
+		int year,
+		int type,
+		int staId,
+		String staName
+	) {
+		this.id = id;
+		this.depId = depId;
+		this.adjust = adjust;
+		this.comment = comment;
+		this.democracy = democracy;
+		this.dfinal = dfinal;
+		this.isRecommend = isRecommend;
+		this.year = year;
+		this.type = type;
+		this.staId = staId;
+		this.staName = staName;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepId() {
+		return depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public int getAdjust() {
+		return adjust;
+	}
+
+	public void setAdjust(int adjust) {
+		this.adjust = adjust;
+	}
+
+	public int getComment() {
+		return comment;
+	}
+
+	public void setComment(int comment) {
+		this.comment = comment;
+	}
+
+	public int getDemocracy() {
+		return democracy;
+	}
+
+	public void setDemocracy(int democracy) {
+		this.democracy = democracy;
+	}
+
+	public int getDfinal() {
+		return dfinal;
+	}
+
+	public void setDfinal(int dfinal) {
+		this.dfinal = dfinal;
+	}
+
+	public int getIsRecommend() {
+		return isRecommend;
+	}
+
+	public void setIsRecommend(int isRecommend) {
+		this.isRecommend = isRecommend;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public int getStaId() {
+		return staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+	public String getStaName() {
+		return staName;
+	}
+
+	public void setStaName(String staName) {
+		this.staName = staName;
+	}
+	
+}

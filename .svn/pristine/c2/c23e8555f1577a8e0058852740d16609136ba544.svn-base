@@ -1,0 +1,156 @@
+package com.ewaytek.model.pojo;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+public class DepartmentEvaluationEx {
+	
+	private int id;
+	private int depId;
+	private int depLevel;
+	private int achievement;
+	private int comment;
+	private int democracy;
+	private int dfinal;
+	private int dCalc;
+	private int dFix;
+	private int leader;
+	private String depName;
+	private String mark;
+	private String message;
+	private int year;
+	
+	public DepartmentEvaluationEx(){
+		
+	}
+	
+	public DepartmentEvaluationEx(int id, int depId, int depLevel, String depName, int democracy, int leader,  int achievement, int comment, int dCalc, int dFix,  int dfinal, String mark, int year){
+		this.id = id;
+		this.depId = depId;
+		this.depLevel = depLevel;
+		this.depName = depName;
+		this.achievement = achievement;
+		this.comment = comment;
+		this.democracy = democracy;
+		this.dCalc = dCalc;
+		this.dFix = dFix;
+		this.dfinal = dfinal;
+		this.leader = leader;
+		this.mark = mark;
+		this.year = year;
+	}
+
+	public int getDepId() {
+		return depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public int getAchievement() {
+		return achievement;
+	}
+
+	public void setAchievement(int achievement) {
+		this.achievement = achievement;
+	}
+
+	public int getComment() {
+		return comment;
+	}
+
+	public void setComment(int comment) {
+		this.comment = comment;
+	}
+
+	public int getDemocracy() {
+		return democracy;
+	}
+
+	public void setDemocracy(int democracy) {
+		this.democracy = democracy;
+	}
+
+	public int getDfinal() {
+		return dfinal;
+	}
+
+	public void setDfinal(int dfinal) {
+		this.dfinal = dfinal;
+	}
+
+	public int getLeader() {
+		return leader;
+	}
+
+	public void setLeader(int leader) {
+		this.leader = leader;
+	}
+
+	public String getDepName() {
+		return depName;
+	}
+
+	public void setDepName(String depName) {
+		this.depName = depName;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepLevel() {
+		return depLevel;
+	}
+
+	public void setDepLevel(int depLevel) {
+		this.depLevel = depLevel;
+	}
+
+	public int getdCalc() {
+		return dCalc;
+	}
+
+	public void setdCalc(int dCalc) {
+		this.dCalc = dCalc;
+	}
+
+	public int getdFix() {
+		return dFix;
+	}
+
+	public void setdFix(int dFix) {
+		this.dFix = dFix;
+	}
+
+	public String getMark() {
+		return mark;
+	}
+
+	public void setMark(String mark) {
+		this.mark = mark;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+}

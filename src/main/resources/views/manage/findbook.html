@@ -1,0 +1,136 @@
+<#import "layout/layout.html" as layout /> <#macro header> </#macro>
+<#assign header=header in layout /> <#macro footer>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		q : {
+			bookname : ""
+		},
+		title : null,
+		disabled : false,
+		book : {
+			status : 1
+		},
+		
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'bookname': vm.q.bookname},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		update: function(){
+			var id = getSelectedRow();
+			
+			if(id == null){
+				alert("请先选择要借的书!")
+				return ;
+			}
+			
+			vm.title = "借阅图书";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		
+		get: function(id){
+			$.get(baseURL + "/manage/findbook/info/"+id, function(r){
+				if(r.code == 0){
+					alert(r.msg);
+					vm.reload();
+				}else{
+					alert(r.msg);
+				}
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '330px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/manage/findbook/save",
+					    data: JSON.stringify(vm.book),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/manage/findbook/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '图书编号', name: 'bookid', index: "bookid", width: 45, key: true, sortable: false },
+			{ label: '图书名字', name: 'bookname', width: 75, sortable: false },
+			{ label: '作者姓名', name: 'authorname', width: 90, sortable: false },
+			{ label: '库存量', name: 'qty', width: 80, sortable: false},
+        ],
+		viewrecords: false,
+        height: 385,
+        rowNum: 10,
+		rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+});
+</script>
+</#macro> 
+
+<#assign footer=footer in layout /> 
+
+<@layout.doContent contentHeader="图书管理" pageTitle="图书管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.bookname"
+			@keyup.enter="query" placeholder="图书名">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a> 
+	<a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;借书</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>	
+</@layout.doContent>

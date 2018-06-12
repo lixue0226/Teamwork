@@ -1,0 +1,89 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.Date;
+
+
+/**
+ * The persistent class for the department_comment database table.
+ * 
+ */
+@Entity
+@Table(name="department_comment")
+@NamedQuery(name="DepartmentComment.findAll", query="SELECT d FROM DepartmentComment d")
+public class DepartmentComment implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="DCom_ID")
+	private int id;
+
+	@Column(name="DCom_cotent")
+	private String content;
+
+	@Column(name="Dcom_maxLayer")
+	private int maxLayer;
+
+	@Column(name="DCom_year")
+	private int year;
+
+	@Column(name="Dep_ID")
+	private int depId;
+	
+	@Column(name="Dep_level")
+	private int depLevel;
+
+	public DepartmentComment() {
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getContent() {
+		return this.content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public int getMaxLayer() {
+		return this.maxLayer;
+	}
+
+	public void setMaxLayer(int maxLayer) {
+		this.maxLayer = maxLayer;
+	}
+
+	public int getYear() {
+		return this.year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public int getDepLevel() {
+		return depLevel;
+	}
+
+	public void setDepLevel(int depLevel) {
+		this.depLevel = depLevel;
+	}
+
+}

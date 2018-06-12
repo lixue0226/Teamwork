@@ -1,0 +1,321 @@
+<#import "layout/layout_staff.html" as layout />
+
+<#macro header>
+<script src="${rc.contextPath}/libs/ajaxupload.js"></script>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript">
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 0; i < 10; i++){
+	yearlist.push({
+		value: date - i,
+		text : date - i
+	})
+}
+
+function edit(id){
+	vm.get(id);
+}
+
+data = $.extend(
+	data,{
+		q : {
+			name : "",
+			year : 0
+		},
+		years : ${years},
+		title : null,
+		disabled : false,
+		process : {
+			
+		},
+		democracy : {
+		},
+		importData : {
+			
+		}
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'year': vm.q.year, 'name': vm.q.name},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			
+		},
+		update: function(){
+			
+		},
+		del: function(){
+			
+		},
+		get: function(id){
+			if(vm.process != null && vm.process.complete != 1){
+				$.get(baseURL + "/api/department/staff/democracy/info/"+id, function(result){
+					vm.democracy = result.data;
+					vm.dialog();
+				});
+			}
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: "编辑",
+				area: ['600px', '470px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					vm.democracy.number = vm.democracy.number == "" ? 0 : parseInt(vm.democracy.number);
+					vm.democracy.top = vm.democracy.top == "" ? 0 : parseInt(vm.democracy.top);
+					vm.democracy.good = vm.democracy.good == "" ? 0 : parseInt(vm.democracy.good);
+					vm.democracy.nomal = vm.democracy.nomal == "" ? 0 : parseInt(vm.democracy.nomal);
+					vm.democracy.weak = vm.democracy.weak == "" ? 0 : parseInt(vm.democracy.weak);
+					vm.democracy.abstention = vm.democracy.abstention == "" ? 0 : parseInt(vm.democracy.abstention);
+					var total = vm.democracy.top +  vm.democracy.good + vm.democracy.nomal + vm.democracy.weak + vm.democracy.abstention;
+					if(vm.democracy.number != total){
+						alert("输入的信息不正确，所有数量添加不等于总数量");
+						return;
+					}
+					
+					if(vm.process != null && vm.process.complete != 1){
+						$.ajax({
+							type: "POST",
+						    url: baseURL + "/api/department/staff/democracy/save/info",
+						    data: JSON.stringify(vm.democracy),
+						    dataType: "json",
+						    contentType : 'application/json',
+						    success: function(r){
+								if(r.code == 0){
+									layer.close(index);
+									alert(r.msg);
+									vm.reload();
+								}else{
+									alert(r.msg);
+								}
+							}
+						});
+					}
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/department/staff/democracy/list/',
+        datatype: "json",
+        colModel: [		
+        	{ label: '编号', name: 'id', index: "id", width: 45, key: true, sortable: false },
+			{ label: '员工编号', name: 'staId', index: "staId", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '姓名', name: 'staName', width: 75, sortable: false },
+			{ label: '测评人数', name: 'number', width: 90, sortable: false },
+			{ label: '优秀投票数', name: 'top', index: "create_time", width: 80, sortable: false},
+			{ label: '称职投票数', name: 'good', index: "create_time", width: 80, sortable: false},
+			{ label: '基本称职投票数', name: 'nomal', index: "create_time", width: 80, sortable: false},
+			{ label: '不称职投票数', name: 'weak', index: "create_time", width: 80, sortable: false},
+			{ label: '弃权投票数', name: 'abstention', index: "create_time", width: 80, sortable: false},
+			{ label: '最终结果', name: 'dfinal', index: "create_time", width: 80, sortable: false, formatter: function(value, options, row){
+				return ["","不称职","基本称职","称职","优秀"][value];
+			}},
+			{ label: '操作', name: 'id', index: "id", width: 80, sortable: false, formatter: function(value, options, row){
+				var process = $("#jqGrid").getGridParam('userData');
+				if(process != null && process.complete != 1){
+					return '<a class="btn btn-primary" onclick="vm.get('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>';
+				} else {
+					return '';
+				}
+			}}
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 100,
+		rowList : [10,30, 50, 100, 150, 200],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: false,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount",
+            userdata: "process"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        postData : {
+        	year : vm.q.year
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        	vm.process = $("#jqGrid").getGridParam('userData');
+        	if(vm.process != null){
+        		vm.q.year = vm.process.year;
+        	}
+        }
+    });
+	
+	new AjaxUpload('#upload', {
+        action: baseURL + '/api/department/staff/democracy/upload',
+        name: 'file',
+        autoSubmit:true,
+        responseType:"json",
+        onSubmit:function(file, extension){
+            if (!(extension && /^(xls)$/.test(extension.toLowerCase()))){
+                alert('只支持xls格式的图片！');
+                return false;
+            }
+        },
+        onComplete : function(file, r){
+            if(r.code == 0){
+            	vm.importData = r.data;
+            	layer.open({
+    				type: 1,
+    				skin: 'layui-layer-molv',
+    				title: "数据预览",
+    				area: ['750px', '400px'],
+    				shadeClose: false,
+    				content: jQuery("#dataLayer"),
+    				btn: ['确定','取消'],
+    				btn1: function (index) {
+    					$.ajax({
+    						type: "POST",
+    					    url: baseURL + "/api/department/staff/democracy/save",
+    					    data: JSON.stringify(vm.importData),
+    					    dataType: "json",
+    					    contentType : 'application/json',
+    					    success: function(r){
+    							if(r.code == 0){
+    								layer.close(index);
+    								alert(r.msg);
+    								vm.reload();
+    							}else{
+    								alert(r.msg);
+    							}
+    						}
+    					});
+    	            }
+    			});
+            }else{
+                alert(r.msg);
+            }
+        }
+    });
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="民主测评管理" contentLevel="人员考核" pageTitle="民主测评管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<select class="form-control" v-model="q.year" @change="query">
+			<option v-for="option in years" v-bind:value="option">
+				{{ option }}
+			</option>
+		</select>
+	</div>
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="人员名称">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" id="upload" v-show="process != null && process.complete != 1"><i class="fa fa-plus"></i>&nbsp;导入</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">单位名称</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.staName" disabled="disabled" placeholder="单位名称"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">测评人数</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.number" placeholder="单位投票数"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">优秀数</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.top" placeholder="好投票数"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">称职数</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.good" placeholder="较好投票数"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">基本称职数</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.nomal" placeholder="一般投票数"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">不称职数</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.weak" placeholder="差投票数"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">弃权数</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="democracy.abstention" placeholder="弃权投票数"/>
+		    </div>
+		</div>
+	</form>
+</div>
+<div id="dataLayer" style="display: none;">
+	<table id="dataTable" class="ui-jqgrid-btable ui-common-table table table-bordered">
+		<tbody>
+			<tr class="ui-jqgrid-labels">
+				<th class="ui-th-column ui-th-ltr ">员工编号</th>
+				<th class="ui-th-column ui-th-ltr ">员工姓名</th>
+				<th class="ui-th-column ui-th-ltr ">总人数</th>
+				<th class="ui-th-column ui-th-ltr ">优秀人数</th>
+				<th class="ui-th-column ui-th-ltr ">称职人数</th>
+				<th class="ui-th-column ui-th-ltr ">基本称职人数</th>
+				<th class="ui-th-column ui-th-ltr ">不称职人数</th>
+				<th class="ui-th-column ui-th-ltr ">弃权人数</th>
+				<th class="ui-th-column ui-th-ltr ">错误信息</th>
+			</tr>
+			<tr class="jqgrow ui-row-ltr" v-for="item in importData" >
+				<td class="ui-th-column ui-th-ltr ">{{item.staId}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.staName}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.number}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.top}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.good}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.nomal}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.weak}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.abstention}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.message}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</@layout.doContent>

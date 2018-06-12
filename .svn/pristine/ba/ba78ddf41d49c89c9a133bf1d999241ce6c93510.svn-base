@@ -1,0 +1,227 @@
+<#import "layout/layout_staff.html" as layout />
+
+<#macro header>
+<link rel="stylesheet" href="${rc.contextPath}/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript" src="${rc.contextPath}/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/plugins/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		q : {
+			name : ""
+		},
+		title : null,
+		disabled : false,
+		staffactivity: {
+},
+		
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'username': vm.q.username},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "新增活动信息";
+			vm.staffactivity = {};
+			vm.disabled = false;
+			
+			vm.dialog();
+		},
+		update: function(id){
+			vm.title = "修改活动信息";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		del: function(id){
+			var ids = null;
+			if(id != null || id != undefined){
+				ids = [];
+				ids.push(id);
+			} else {
+				ids = getSelectedRows();
+			}
+			if(ids == null){
+				alert("请先选择删除的行!")
+				return ;
+			}
+			confirm('确定要删除选中的记录？', function(){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/department/staff/activity/delete",
+	                contentType: "application/json",
+				    data: JSON.stringify(ids),
+				    success: function(r){
+						if(r.code == 0){
+							alert('删除成功', function(){
+	                            vm.reload();
+							});
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			
+			});
+		},
+		get: function(id){
+			$.get(baseURL + "/api/department/staff/activity/info/"+id, function(result){
+				vm.staffactivity = result.data;
+				vm.dialog();
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['580px', '580px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					vm.staffactivity.born = $("#born").val();
+					vm.staffactivity.joinParty = $("#joinParty").val();
+					vm.staffactivity.joinJob = $("#joinJob").val();
+					
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/api/department/staff/save",
+					    data: JSON.stringify(vm.staffactivity),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/department/staff/activity/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '活动编号', name: 'id', index: "id", width: 45, key: true, sortable: false },
+			{ label: '单位编号', name: 'depId', width: 45, sortable: false },
+			{ label: '人员编号', name: 'staId', width: 45, sortable: false },
+			{ label: '活动名称', name: 'name', width: 80, sortable: false },
+			{ label: '活动地点', name: 'location', width: 40, sortable: false, },
+			{ label: '活动照片', name: 'picture', width: 70, sortable: false },
+			{ label: '活动录像', name: 'video', width: 45, sortable: false },
+			{ label: '活动附件', name: 'accessory', width: 50, sortable: false },
+			{ label: '操作', name: 'id', index: "id", width: 120, sortable: false, formatter: function(value, options, row){
+				return '<a class="btn btn-primary" onclick="vm.update('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>&nbsp;' + 
+						'<a class="btn btn-primary" onclick="vm.del('+value+')"><i class="fa fa-trash-o"></i>&nbsp;删除</a>&nbsp;' ;
+						
+			}},
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 10,
+		rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+	
+	$('.datetimepicker').datetimepicker({
+		minView: "month",
+		language:  'zh-CN',
+		autoclose: true,
+	    format: 'yyyy/mm/dd'
+	});
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="活动管理" contentLevel="人员考核" pageTitle="活动管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="活动名">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+	<a class="btn btn-primary" onclick="vm.del()"><i class="fa fa-trash-o"></i>&nbsp;批量删除</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">活动名称</div>
+		   	<div class="col-sm-10">
+				  <input type="text"  class="form-control"  v-model="staffactivity.name"  placeholder="活动名称"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label ">活动地点</div>
+		   	<div class="col-sm-10">
+		      <input type="text" id="born" class="form-control" v-model="staffactivity.location" placeholder="活动地点"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">活动照片</div>
+		   	<div class="col-sm-10">
+		      <input name="imgfile" type="file" accept="image/gif, image/jpeg" class="form-control" v-model="staffactivity.picture" placeholder="活动照片"/>
+              <input name="upload" type="submit" value="上传" />
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">活动附件</div>
+		   	<div class="col-sm-10">
+		      <input  type="file" class="form-control" v-model="staffactivity.accessory" placeholder="活动附件"/>
+		       <input name="upload" type="submit" value="上传" />
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">活动录像</div>
+		   	<div class="col-sm-10">
+		      <input type="file" class="form-control" v-model="staffactivity.video" placeholder="活动录像"/>
+		       <input name="upload" type="submit" value="上传" />
+		    </div>
+		</div>
+	</form>
+</div>
+</@layout.doContent>

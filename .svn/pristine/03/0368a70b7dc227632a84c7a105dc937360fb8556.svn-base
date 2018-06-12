@@ -1,0 +1,164 @@
+<#macro header>
+</#macro>
+
+<#macro css>
+</#macro>
+
+<#macro content>
+</#macro>
+
+<#macro footer>
+</#macro> 
+
+<#macro layoutHeader> 
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<link rel="stylesheet" href="${rc.contextPath}/css/bootstrap.min.css">
+<link rel="stylesheet" href="${rc.contextPath}/css/font-awesome.min.css">
+<link rel="stylesheet" href="${rc.contextPath}/css/AdminLTE.min.css">
+<link rel="stylesheet" href="${rc.contextPath}/css/all-skins.min.css">
+<link rel="stylesheet" href="${rc.contextPath}/css/main.css">
+<link rel="stylesheet" href="${rc.contextPath}/plugins/jqgrid/ui.jqgrid-bootstrap.css">
+<link rel="stylesheet" href="${rc.contextPath}/plugins/ztree/css/metroStyle/metroStyle.css">
+<@css />
+</#macro>
+
+<#macro layoutFooter>
+<script type="text/javascript">
+var baseURL = "${rc.contextPath}";
+</script>
+<script type="text/javascript" src="${rc.contextPath}/libs/jquery.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/plugins/jqgrid/grid.locale-cn.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/plugins/jqgrid/jquery.jqGrid.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/libs/vue.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/libs/router.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/libs/bootstrap.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/libs/app.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/plugins/layer/layer.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/plugins/ztree/jquery.ztree.all.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/js/common.js"></script>
+<script type="text/javascript">
+var data = {
+	user:{},
+	password:'',
+	newPassword:'',
+	confirmPassword:''
+};
+var methods = {
+	updatePassword: function(){
+		layer.open({
+			type: 1,
+			skin: 'layui-layer-molv',
+			title: "修改密码",
+			area: ['550px', '330px'],
+			shadeClose: false,
+			content: jQuery("#passwordLayer"),
+			btn: ['修改','取消'],
+			btn1: function (index) {
+				var data = "password="+vm.password+"&newPassword="+vm.newPassword+"&confirmPassword="+vm.confirmPassword;
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/user/password",
+				    data: data,
+				    dataType: "json",
+				    success: function(r){
+						if(r.code == 0){
+							layer.close(index);
+							layer.alert("密码修改成功");
+						}else{
+							layer.alert(r.msg);
+						}
+					}
+				});
+            }
+		});
+	}
+};
+</script>
+</#macro>
+
+<#macro doPage pageTitle="title">
+	<html>
+    	<head>
+    		<title>${site.title} - ${pageTitle}</title>
+    		<@layoutHeader />
+    		<@header />
+    	</head>
+        
+		<#nested />
+        
+        <@layoutFooter />
+        <@footer />
+        
+    </html> 
+</#macro>
+
+<#macro doContent pageTitle="title" contentHeader="header" contentLevel="" contentDesc=""> 
+    <!DOCTYPE html>
+    <html>
+    	<head>
+    		<title>${pageTitle}</title>
+    		<@layoutHeader />
+    		<@header />
+    	</head>
+        <body class="hold-transition skin-blue sidebar-mini">
+        	<div class="wrapper" id="ewayapp">
+        		<#include "layout/frames/top.html">
+        		<#include "layout/frames/left_staff.html">
+        		
+        		<div class="content-wrapper" id="ewayContent">
+        			<section class="content-header">
+				      <ol class="breadcrumb" id="nav_title" style="position:static;float:none;">
+				      	<li class="active" style="font-size: 18px; line-height: 23px;"><i class="fa fa-home" style="font-size:23px;position:relative;top:2px;left:-5px;"></i>${contentLevel} </li>
+				        <li class="active" style="font-size: 18px; line-height: 23px;"> ${contentHeader} </li>
+				      </ol>
+				    </section>
+				    				    
+				    <section class="content" style="background:#fff;">
+				    	<#nested />
+				    </section>
+				</div>
+				
+				<div id="passwordLayer" style="display: none;">
+					<form class="form-horizontal">
+						<div class="form-group">
+							<div class="form-group">
+							   	<div class="col-sm-2 control-label">账号</div>
+							    <span class="label label-success" style="vertical-align: bottom;">${user.username}</span>
+							</div>
+							<div class="form-group">
+							   	<div class="col-sm-2 control-label">原密码</div>
+							   	<div class="col-sm-10">
+							      <input type="password" class="form-control" v-model="password" placeholder="原密码"/>
+							    </div>
+							</div>
+							<div class="form-group">
+							   	<div class="col-sm-2 control-label">新密码</div>
+							   	<div class="col-sm-10">
+							      <input type="password" class="form-control" v-model="newPassword" placeholder="新密码"/>
+							    </div>
+							</div>
+							<div class="form-group">
+							   	<div class="col-sm-2 control-label">确认密码</div>
+							   	<div class="col-sm-10">
+							      <input type="password" class="form-control" v-model="confirmPassword" placeholder="确认密码"/>
+							    </div>
+							</div>
+						</div>
+					</form>
+				  </div>
+			</div>
+        </body>
+        
+        <@layoutFooter />
+        <@footer />
+        <script type="text/javascript">
+        var vm = new Vue({
+        	el:'#ewayapp',
+        	data: data,
+        	methods: methods
+        });
+        </script>
+    </html> 
+</#macro>

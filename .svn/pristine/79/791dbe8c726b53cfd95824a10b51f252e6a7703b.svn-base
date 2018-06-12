@@ -1,0 +1,259 @@
+package com.ewaytek.manage.api.controller.department;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.Department;
+import com.ewaytek.model.DepartmentEvaluation;
+import com.ewaytek.model.pojo.DepartmentEvaluationEx;
+import com.ewaytek.repository.DepartmentEvaluationRepository;
+import com.ewaytek.repository.DepartmentRepository;
+
+@Controller
+@RequestMapping("/api/department")
+public class DepartmentController {
+	
+	@Autowired
+	private DepartmentRepository departmentRepository;
+	
+	@Autowired
+	private DepartmentEvaluationRepository departmentEvaluationRepository;
+	
+	@RequestMapping("/chart/{id}")
+	@ResponseBody
+	public Map<String,Object> chart(@PathVariable("id") int id){
+		try{
+			List<DepartmentEvaluation> departmentEvaluations = departmentEvaluationRepository.findByDepId(id);
+			
+			Calendar cal = Calendar.getInstance();
+			int year = cal.get(Calendar.YEAR);
+			int startYear = year - 10;
+			
+			List<Integer> lists = new ArrayList<Integer>();
+			for(int i = 0; i < 10; i++){
+				lists.add(0);
+			}
+			
+			for(int i = 0; i < departmentEvaluations.size(); i++){
+				DepartmentEvaluation departmentEvaluation = departmentEvaluations.get(i);
+				int index = departmentEvaluation.getYear() - startYear - 1;
+				lists.set(index, departmentEvaluation.getDfinal());
+			}
+			
+			return Result.ok().put("data", lists);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping(value="/list/leader")
+	@ResponseBody
+	public Map<String,Object> listLeader(
+			@RequestParam(value = "id", defaultValue = "") final int id, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<DepartmentEvaluationEx> list = departmentEvaluationRepository.findDepartmentEvaluationByDepId(id, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping(value="/list/achievement")
+	@ResponseBody
+	public Map<String,Object> listAchievement(
+			@RequestParam(value = "id", defaultValue = "") final int id, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<DepartmentEvaluationEx> list = departmentEvaluationRepository.findDepartmentEvaluationByDepId(id, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping(value="/list/democracy")
+	@ResponseBody
+	public Map<String,Object> listDemocracy(
+			@RequestParam(value = "id", defaultValue = "") final int id, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<DepartmentEvaluationEx> list = departmentEvaluationRepository.findDepartmentEvaluationByDepId(id, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping(value="/list/comment")
+	@ResponseBody
+	public Map<String,Object> listComment(
+			@RequestParam(value = "id", defaultValue = "") final int id, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<DepartmentEvaluationEx> list = departmentEvaluationRepository.findDepartmentEvaluationByDepId(id, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+
+	@RequestMapping(value="/list")
+	@ResponseBody
+	public Map<String,Object> list(
+			@RequestParam(value = "name", defaultValue = "") final String name, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Specification<Department> condtions = new Specification<Department>(){
+
+				@Override
+				public Predicate toPredicate(Root<Department> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+					Predicate namePredicate = cb.like(root.get("name").as(String.class), "%"+ name +"%");
+					query.where(namePredicate);
+					return query.getRestriction();
+				}
+				
+			};
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<Department> list = departmentRepository.findAll(condtions, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/info/{id}")
+	@ResponseBody
+	public Map<String,Object> info(@PathVariable("id") Integer id){
+		try{
+			Department department = departmentRepository.findOne(id);
+			
+			return Result.ok().put("data", department);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/save")
+	@ResponseBody
+	public Map<String,Object> info(@RequestBody Department department){
+		try {
+			if(department.getId() == 0){
+				// add
+				ValidatorUtils.validateEntity(department, AddGroup.class);
+				
+				departmentRepository.save(department);
+				
+				return Result.ok("添加成功");
+			} else {
+				// edit
+				ValidatorUtils.validateEntity(department, UpdateGroup.class);
+				
+				departmentRepository.save(department);
+				
+				return Result.ok("修改成功");
+			}
+		} catch (Exception e) {
+			return Result.error(e.getMessage());
+		}
+	}
+	
+	@RequestMapping("/delete")
+	@ResponseBody
+	public Map<String,Object> delete(@RequestBody Integer[] ids){
+		for (Integer id : ids) {
+			departmentRepository.delete(id);
+		}
+		
+		return Result.ok("删除成功");
+	}
+}

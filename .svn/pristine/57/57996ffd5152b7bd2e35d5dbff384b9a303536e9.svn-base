@@ -1,0 +1,124 @@
+package com.ewaytek.model.pojo;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class DepartmentCommentEx {
+
+	private int id;
+	private int depId;
+	private int depLevel;
+	private String depName;
+	private int maxYear;
+	private String content;
+	private List<DepartmentCommentExItem> contentItems;
+	private String message;
+	
+	public DepartmentCommentEx(){
+		
+	}
+	
+	public DepartmentCommentEx(int id, int depId, int depLevel, String depName, int maxYear, String content){
+		this.id = id;
+		this.depId = depId;
+		this.depLevel = depLevel;
+		this.depName = depName;
+		this.maxYear = maxYear;
+		this.content = content;
+		
+		List<DepartmentCommentExItem> contentItems = new ArrayList<DepartmentCommentExItem>();
+		if(this.content != null && !this.content.equals("")){
+			
+			JSONArray jsonArray = JSONArray.parseArray(this.content);
+		
+			for(int i = 0; i < jsonArray.size(); i++){
+				DepartmentCommentExItem item = new DepartmentCommentExItem();
+				
+				JSONObject object = jsonArray.getJSONObject(i);
+				item.setComment(object.getString("comment"));
+				item.setValue(object.getString("value"));
+				item.setMax(object.getString("max"));
+				
+				contentItems.add(item);
+			}
+		}
+		this.setContentItems(contentItems);
+	}
+
+	public int getDepId() {
+		return depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public String getDepName() {
+		return depName;
+	}
+
+	public void setDepName(String depName) {
+		this.depName = depName;
+	}
+
+	public int getMaxYear() {
+		return maxYear;
+	}
+
+	public void setMaxYear(int maxYear) {
+		this.maxYear = maxYear;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public List<DepartmentCommentExItem> getContentItems() {
+		return contentItems;
+	}
+
+	public void setContentItems(List<DepartmentCommentExItem> contentItems) {
+		this.contentItems = contentItems;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepLevel() {
+		return depLevel;
+	}
+
+	public void setDepLevel(int depLevel) {
+		this.depLevel = depLevel;
+	}
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>${site.title}</title>
+
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="renderer" content="webkit">
+<meta name="keywords" content="首页 - ${site.title} " />
+<meta name="description" content="" />
+
+<link rel="stylesheet" href="${rc.contextPath}/res//css/main.css">
+<style type="text/css">
+	.fun-con
+	{
+		width: 900px;
+	}
+	#Content3{
+		margin: 10px auto 0;
+	}
+</style>
+</head>
+<body>
+	<div id="Body">
+		
+		<#include "/front/frames/top.html">
+		
+		<div id="Content">
+		
+			<div class="paths"><a href="${rc.contextPath}/"><img src="${rc.contextPath}/res/images/homeico.png">首页</a><span><span id="PathID4"> &gt; <a href="#">${name}</a></span></span></div>
+			
+			<div id="Content3">
+   				<div class="listdiv">
+   					<ul>
+   						<#list notice.content as notice>
+   						<li>
+   							<span id="ReportIDname">
+   								<a href="${rc.contextPath}/notice/info/${notice.id}" target="_self" title="${notice.title}">${notice.title}</a>
+   							</span>
+   							<span id="ReportIDIssueTime">${notice.createAt?date}</span>
+   						</li>
+   						</#list>
+   						
+   						<li id="PageNum">
+   							<#list 1..notice.totalPages as page>
+   								<#if page == currentpage >
+   									<span>${page}</span>
+   								<#else>
+   									<a href="${rc.contextPath}/notice/${type}?page=${page}">${page}</a> 
+   								</#if>
+   								
+   							</#list>
+   						</li>
+   					</ul>
+   				</div>
+			</div>
+		</div>
+		
+		<#include "/front/frames/footer.html">
+		
+	</div>
+	
+</body>
+<#include "/front/frames/script.html">
+</html>

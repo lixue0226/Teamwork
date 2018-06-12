@@ -1,0 +1,94 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.Date;
+
+
+/**
+ * The persistent class for the cms_notice database table.
+ * 
+ */
+@Entity
+@Table(name="cms_notice")
+@NamedQuery(name="Notice.findAll", query="SELECT n FROM Notice n")
+public class Notice implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int category;
+	private String content;
+	private Date createAt;
+	private String creator;
+	private String attachment;
+	private String title;
+
+	public Notice() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	public int getCategory() {
+		return this.category;
+	}
+
+	public void setCategory(int category) {
+		this.category = category;
+	}
+
+
+	@Lob
+	public String getContent() {
+		return this.content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+	
+	public String getAttachment(){
+		return this.attachment;
+	}
+	
+	public void setAttachment(String attachment){
+		this.attachment = attachment;
+	}
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="create_at")
+	public Date getCreateAt() {
+		return this.createAt;
+	}
+
+	public void setCreateAt(Date createAt) {
+		this.createAt = createAt;
+	}
+
+
+	public String getCreator() {
+		return this.creator;
+	}
+
+	public void setCreator(String creator) {
+		this.creator = creator;
+	}
+
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+}

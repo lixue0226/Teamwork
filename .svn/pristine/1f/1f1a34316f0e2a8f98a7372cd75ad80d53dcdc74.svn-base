@@ -1,0 +1,155 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.Date;
+
+
+/**
+ * The persistent class for the department_evaluation database table.
+ * 
+ */
+@Entity
+@Table(name="department_evaluation")
+@NamedQuery(name="DepartmentEvaluation.findAll", query="SELECT d FROM DepartmentEvaluation d")
+public class DepartmentEvaluation implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="DEva_ID")
+	private int id;
+
+	@Column(name="Dep_ID")
+	private int depId;
+
+	@Column(name="DEva_achievement")
+	private int achievement;
+
+	@Column(name="DEva_comment")
+	private int comment;
+
+	@Column(name="DEva_democracy")
+	private int democracy;
+
+	@Column(name="DEva_final")
+	private int dfinal;
+
+	@Column(name="DEva_leader")
+	private int leader;
+
+	@Column(name="DEva_year")
+	private int year;
+	
+	@Column(name="Dep_level")
+	private int depLevel;
+	
+	@Column(name="DEva_calc")
+	private int dCalc;
+	
+	@Column(name="DEva_fix")
+	private int dFix;
+	
+	@Column(name="Deva_mark")
+	private String mark;
+
+	public int getdCalc() {
+		return dCalc;
+	}
+
+	public void setdCalc(int dCalc) {
+		this.dCalc = dCalc;
+	}
+
+	public int getdFix() {
+		return dFix;
+	}
+
+	public void setdFix(int dFix) {
+		this.dFix = dFix;
+	}
+
+	public DepartmentEvaluation() {
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public int getAchievement() {
+		return this.achievement;
+	}
+
+	public void setAchievement(int achievement) {
+		this.achievement = achievement;
+	}
+
+	public int getComment() {
+		return this.comment;
+	}
+
+	public void setComment(int comment) {
+		this.comment = comment;
+	}
+
+	public int getDemocracy() {
+		return this.democracy;
+	}
+
+	public void setDemocracy(int democracy) {
+		this.democracy = democracy;
+	}
+
+	public int getDfinal() {
+		return this.dfinal;
+	}
+
+	public void setDfinal(int dfinal) {
+		this.dfinal = dfinal;
+	}
+
+	public int getLeader() {
+		return this.leader;
+	}
+
+	public void setLeader(int leader) {
+		this.leader = leader;
+	}
+
+	public int getYear() {
+		return this.year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getDepLevel() {
+		return depLevel;
+	}
+
+	public void setDepLevel(int depLevel) {
+		this.depLevel = depLevel;
+	}
+
+	public String getMark() {
+		return mark;
+	}
+
+	public void setMark(String mark) {
+		this.mark = mark;
+	}
+
+}

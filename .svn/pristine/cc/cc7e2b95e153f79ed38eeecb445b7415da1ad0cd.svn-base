@@ -1,0 +1,27 @@
+<aside class="main-sidebar">
+  <section class="sidebar">
+    	<ul class="sidebar-menu">
+    		<li class="treeview">
+    			<a href="${rc.contextPath}/manage/department/staff/${staff.id?c}"><i class="fa fa-dashboard"></i><span>员工信息</span>
+        		</a>
+        	</li>
+        	<li class="treeview">
+    			<a href="${rc.contextPath}/manage/department/staff/${staff.id?c}/resume"><i class="fa fa-dashboard"></i><span>履历管理</span>
+        		</a>
+    		</li>
+    		<li class="treeview">
+    			<a href="${rc.contextPath}/manage/department/staff/${staff.id?c}/relation"><i class="fa fa-dashboard"></i><span>家庭关系管理</span>
+        		</a>
+    		</li>
+    		<li class="treeview">
+    			<a href="${rc.contextPath}/manage/department/staff/${staff.id?c}/rewards"><i class="fa fa-dashboard"></i><span>奖惩管理</span>
+        		</a>
+    		</li>
+    		<li class="treeview">
+    			<a href="${rc.contextPath}/manage/department/staff/${staff.id?c}/activity"><i class="fa fa-dashboard"></i><span>活动管理</span>
+        		</a>
+    		</li>
+    	</ul>
+  	</section>
+</aside>
+

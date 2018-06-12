@@ -1,0 +1,37 @@
+package com.ewaytek.repository;
+
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.StaffComment;
+import com.ewaytek.model.pojo.StaffCommentEx;
+
+public interface StaffCommentRepository extends JpaRepository<StaffComment, Integer>, JpaSpecificationExecutor<StaffComment> {
+
+	@Modifying(clearAutomatically=true)
+	@Query("delete from StaffComment t where t.year = :year")
+	@Transactional
+	void deleteStaffCommentByYear(@Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query(nativeQuery=true, value="INSERT into staff_comment(`Sta_ID`, `Dep_ID`,`SCom_year`) SELECT s.Sta_ID, sr.Dep_ID, :year FROM staff s LEFT OUTER JOIN (SELECT a.* FROM staff_resume a WHERE a.Sta_date = (SELECT max(Sta_date) FROM staff_resume b WHERE b.Sta_ID = a.Sta_ID)) sr ON s.Sta_ID = sr.Sta_ID where sr.Dep_ID in (select Dep_ID from department_evaluation where DEva_year = :year)")
+	@Transactional
+	int createStaffCommentByYear(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.StaffCommentEx(dc.id,dc.depId,dc.content,dc.inputYear,dc.maxLevel,dc.useYear,dc.staId,dc.year,d.name) from StaffComment dc, Staff d where dc.staId = d.id and dc.depId = :depId and dc.year = :year and d.name like %:name% order by dc.id desc")
+	List<StaffCommentEx> findStaffComment(@Param("year") Integer year, @Param("depId") Integer depId, @Param("name") String name);
+	
+	@Query("from StaffComment dd where dd.year = :year and dd.depId = :depId ")
+	List<StaffComment> findStaffComment(@Param("year") Integer year, @Param("depId") Integer depId);
+	
+	@Query("select new com.ewaytek.model.pojo.StaffCommentEx(dc.id,dc.depId,dc.content,dc.inputYear,dc.maxLevel,dc.useYear,dc.staId,dc.year,d.name) from StaffComment dc, Staff d where dc.staId = d.id and dc.depId = :depId and dc.year = :year and d.name like %:name%")
+	Page<StaffCommentEx> findStaffComment(@Param("year") Integer year, @Param("depId") Integer depId, @Param("name") String name, Pageable page);
+}

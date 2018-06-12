@@ -1,0 +1,93 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+
+
+/**
+ * The persistent class for the department database table.
+ * 
+ */
+@Entity
+@NamedQuery(name="Department.findAll", query="SELECT d FROM Department d")
+public class Department implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="Dep_ID")
+	private int id;
+
+	@Column(name="Dep_City")
+	// @NotBlank(message="城市编号不能为空", groups = {AddGroup.class, UpdateGroup.class})
+	private int city;
+
+	@Column(name="Dep_description")
+	private String description;
+
+	private String dep_is_show;
+
+	@Column(name="Dep_Name")
+	@NotBlank(message="单位名称不能为空", groups = {AddGroup.class, UpdateGroup.class})
+	private String name;
+	
+	@Column(name="Dep_Fullname")
+	private String fullname;
+
+	public Department() {
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getCity() {
+		return this.city;
+	}
+
+	public void setCity(int city) {
+		this.city = city;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getDep_is_show() {
+		return this.dep_is_show;
+	}
+
+	public void setDep_is_show(String dep_is_show) {
+		this.dep_is_show = dep_is_show;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getFullname() {
+		return fullname;
+	}
+
+	public void setFullname(String fullname) {
+		this.fullname = fullname;
+	}
+
+}

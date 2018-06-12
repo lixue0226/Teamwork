@@ -1,0 +1,28 @@
+<script src="${rc.contextPath}/res/js/jquery-1.11.1.min.js" type="text/javascript"></script> 
+<script type="text/javascript">
+	$(function(){
+		var maskLeft = $(".nav .mask").position().left
+		$(".nav ul li").hover(function(){
+				$(".nav .mask").stop().animate({"left":$(this).position().left -3});
+			},function(){
+				$(".nav .mask").stop().animate({"left":maskLeft});
+			}
+		);
+		
+		$(".navBgBox li").hover(function(){
+	    	$(this).addClass("hover")
+	    },function(){
+	       	$(this).removeClass("hover")
+	    })
+	     
+	    $(".funbox").hover(function(){
+	        var var1=$(this).attr("class");
+	        var var2=var1.split(' ');
+	        $(this).addClass("box"+var2[1])
+	    },function(){
+	        var var1=$(this).attr("class");
+	        var var2=var1.split(' ');
+	        $(this).removeClass("box"+var2[1])
+	    })
+	});
+</script>

@@ -1,0 +1,307 @@
+package com.ewaytek.manage.api.controller.department;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.Department;
+import com.ewaytek.model.DepartmentComment;
+import com.ewaytek.model.DepartmentDemocracy;
+import com.ewaytek.model.DepartmentEvaluation;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+import com.ewaytek.repository.DepartmentCommentRepository;
+import com.ewaytek.repository.DepartmentDemocracyRepository;
+import com.ewaytek.repository.DepartmentEvaluationRepository;
+import com.ewaytek.repository.DepartmentProcessRepository;
+import com.ewaytek.repository.DepartmentRepository;
+import com.ewaytek.repository.DepartmentTreeRepository;
+
+@Controller
+@RequestMapping("/api/department/process")
+public class DepartmentProcessController {
+	
+	@Autowired
+	private DepartmentProcessRepository departmentProcessRepository;
+	
+	@Autowired
+	private DepartmentDemocracyRepository departmentDemocracyRepository;
+	
+	@Autowired
+	private DepartmentCommentRepository departmentCommentRepository;
+	
+	@Autowired
+	private DepartmentEvaluationRepository departmentEvaluationRepository;
+	
+	@Autowired
+	private DepartmentTreeRepository departmentTreeRepository;
+	
+	/**
+	 * 查询每年的进度信息
+	 * @param year	年份
+	 * @return
+	 */
+	@RequestMapping("/info")
+	@ResponseBody
+	public Map<String,Object> info(){
+		try{
+			DepartmentProcess departmentProcess = departmentProcessRepository.fetchCurrent();
+			
+			// 数据不为空，且已经有结果，需要统计总体的数据
+			if(departmentProcess != null && departmentProcess.getComplete() == 1){
+				// 计算年度统计
+				List<Integer> results = new ArrayList<Integer>();
+				for(int i = 0; i < 4; i++){
+					results.add(0);
+				}
+				
+				// 获取所有考核的部门并计算结果
+				List<DepartmentEvaluation> departmentEvaluations = departmentEvaluationRepository.findDepartmentEvaluation(departmentProcess.getYear());
+				for(int i = 0; i < departmentEvaluations.size(); i++){
+					DepartmentEvaluation evaluation = departmentEvaluations.get(i);
+					
+					int dCount = results.get(evaluation.getDfinal() - 1) + 1;
+					results.set(evaluation.getDfinal() - 1, dCount);
+				}
+				
+				return Result.ok().put("data", departmentProcess).put("total", results);
+			} else {
+				return Result.ok().put("data", departmentProcess);
+			}
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	/**
+	 * 查询每年的进度信息
+	 * @param year	年份
+	 * @return
+	 */
+	@RequestMapping("/years")
+	@ResponseBody
+	public Map<String,Object> years(){
+		try{
+			List<Integer> years = departmentProcessRepository.findDistinctYear();
+			return Result.ok().put("data", years);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	/**
+	 * 查询每年的进度信息
+	 * @param year	年份
+	 * @return
+	 */
+	@RequestMapping("/info/{year}")
+	@ResponseBody
+	public Map<String,Object> info(@PathVariable("year") Integer year){
+		try{
+			DepartmentProcess departmentProcess = departmentProcessRepository.findProcessByYear(year);
+			
+			// 数据不为空，且已经有结果，需要统计总体的数据
+			if(departmentProcess != null && departmentProcess.getComplete() == 1){
+				// 计算年度统计
+				List<Integer> results = new ArrayList<Integer>();
+				for(int i = 0; i < 4; i++){
+					results.add(0);
+				}
+				
+				// 获取所有考核的部门并计算结果
+				List<DepartmentEvaluation> departmentEvaluations = departmentEvaluationRepository.findDepartmentEvaluation(year);
+				for(int i = 0; i < departmentEvaluations.size(); i++){
+					DepartmentEvaluation evaluation = departmentEvaluations.get(i);
+					
+					int dCount = results.get(evaluation.getDfinal() - 1) + 1;
+					results.set(evaluation.getDfinal() - 1, dCount);
+				}
+				
+				return Result.ok().put("data", departmentProcess).put("total", results);
+			} else {
+				return Result.ok().put("data", departmentProcess);
+			}
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/department/{year}")
+	@ResponseBody
+	public Map<String,Object> department(@PathVariable("year") Integer year){
+		try{
+			DepartmentProcess departmentProcess = null;
+			if(year == 0){
+				departmentProcess = departmentProcessRepository.fetchCurrent();
+				year = departmentProcess.getYear();
+			} else {
+				departmentProcess = departmentProcessRepository.findProcessByYear(year);
+			}
+			List<DepartmentTreeEx> treeList = departmentTreeRepository.findTreeByYear(year);
+			
+			Map<String,Object> area = new HashMap<String,Object>();
+			
+			List<DepartmentTreeEx> area1 = new ArrayList<DepartmentTreeEx>();
+			List<DepartmentTreeEx> area2 = new ArrayList<DepartmentTreeEx>();
+			List<DepartmentTreeEx> area3 = new ArrayList<DepartmentTreeEx>();
+			List<DepartmentTreeEx> area4 = new ArrayList<DepartmentTreeEx>();
+			List<DepartmentTreeEx> area5 = departmentTreeRepository.findNoTreeByYear(year);
+			
+			for(int i = 0; i < treeList.size(); i++){
+				DepartmentTreeEx tree = treeList.get(i);
+				
+				if(tree.getType() == 1){
+					area1.add(tree);
+				} else if(tree.getType() == 2){
+					area2.add(tree);
+				} else if(tree.getType() == 3){
+					area3.add(tree);
+				} else if(tree.getType() == 4){
+					area4.add(tree);
+				}
+			}
+			
+			area.put("area1", area1);
+			area.put("area2", area2);
+			area.put("area3", area3);
+			area.put("area4", area4);
+			area.put("area5", area5);
+			
+			return Result.ok().put("data", area).put("process", departmentProcess);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/save/{year}")
+	@ResponseBody
+	@Transactional
+	public Map<String,Object> save(@PathVariable("year") Integer year, @RequestParam(value = "force", defaultValue = "0") Integer force,  @RequestBody List<DepartmentTreeEx> areas){
+		
+		if(areas == null || areas.size() <=0){
+			return Result.error("请先设置单位!");
+		}
+		
+		if(force == 1){
+			departmentTreeRepository.deleteTreeByYear(year);
+			departmentDemocracyRepository.deleteTreeByYear(year);
+			departmentCommentRepository.deleteTreeByYear(year);
+			departmentEvaluationRepository.deleteTreeByYear(year);
+		} else {			
+			departmentTreeRepository.deleteTreeByYear(year);
+		}
+		
+		for(int i = 0; i < areas.size(); i++){
+			DepartmentTree tree = new DepartmentTree();
+			DepartmentTreeEx area = areas.get(i);
+			
+			tree.setDepId(area.getDepId());
+			tree.setIsEvaluation(area.getIsEvaluation());
+			tree.setYear(year);
+			tree.setIsShowLevel(0);
+			tree.setReason(area.getReason());
+			tree.setType(area.getType());
+			
+			departmentTreeRepository.save(tree);
+		}
+		
+		if(force == 1){
+			// 删除原有进度信息
+			DepartmentProcess departmentProcess = departmentProcessRepository.findProcessByYear(year);
+			if(departmentProcess != null){
+				departmentProcessRepository.delete(departmentProcess);
+			}
+			
+			// 创建保存进度信息
+			departmentProcess = new DepartmentProcess();
+			departmentProcess.setYear(year);
+			departmentProcess.setLeader(0);
+			departmentProcess.setAchievement(0);
+			departmentProcess.setDemocracy(0);
+			departmentProcess.setComplete(0);
+			departmentProcessRepository.save(departmentProcess);
+			
+			// 删除所有的民主测评
+			// 删除单位评论信息
+			// 删除领导评价信息
+			
+			
+			for(int i = 0; i < areas.size(); i++){
+				if(areas.get(i).getType() < 1){
+					continue;
+				}
+				// 添加民主测评信息
+				DepartmentDemocracy democracy = new DepartmentDemocracy(); 
+				democracy.setDepLevel(areas.get(i).getType());
+				democracy.setDepId(areas.get(i).getDepId());
+				democracy.setYear(year);
+				departmentDemocracyRepository.save(democracy);
+				
+				// 添加单位评价信息
+				DepartmentComment comment = new DepartmentComment();
+				comment.setDepLevel(areas.get(i).getType());
+				comment.setDepId(areas.get(i).getDepId());
+				comment.setYear(year);
+				departmentCommentRepository.save(comment);
+				
+				// 添加凌达评价信息
+				DepartmentEvaluation evaluation = new DepartmentEvaluation();
+				evaluation.setDepLevel(areas.get(i).getType());
+				evaluation.setDepId(areas.get(i).getDepId());
+				evaluation.setYear(year);
+				departmentEvaluationRepository.save(evaluation);
+			}
+		}
+		return Result.ok("保存成功");
+	}
+	
+	@RequestMapping("/create/{year}")
+	@ResponseBody
+	public Map<String,Object> create(@PathVariable("year") Integer year){
+		try{
+//			DepartmentProcess departmentProcess = departmentProcessRepository.findProcessByYear(year);
+//			if(departmentProcess == null){
+//				departmentProcess = new DepartmentProcess();
+//				departmentProcess.setYear(year);
+//			}
+//			departmentProcess.setLeader(0);
+//			departmentProcess.setAchievement(0);
+//			departmentProcess.setDemocracy(0);
+//			
+//			departmentProcessRepository.save(departmentProcess);
+//			
+//			return Result.ok("开始新的考核成功").put("data", departmentProcess);
+			return Result.ok("开始新的考核成功");
+		} catch (Exception e){
+			return Result.ok("开始新的考核失败").put("data", new HashMap<String, Object>());
+		}
+	}
+	
+}

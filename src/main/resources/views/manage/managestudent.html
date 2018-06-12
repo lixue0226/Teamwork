@@ -1,0 +1,191 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		q : {
+			sname : ""
+		},
+		title : null,
+		disabled : false,
+		student : {
+			status : 1
+		},
+		
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'sname': vm.q.sname},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "新增学生";
+			vm.student = {};
+			vm.disabled = false;
+			vm.dialog();
+		},
+		update: function(){
+			var id = getSelectedRow();
+			
+			if(id == null){
+				alert("请先选择编辑的行!")
+				return ;
+			}
+			
+			vm.title = "修改学生";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		del: function(){
+			var ids = getSelectedRows();
+			if(ids == null){
+				alert("请先选择删除的行!")
+				return ;
+			}
+			confirm('确定要删除选中的记录？', function(){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/manage/managestudent/delete",
+	                contentType: "application/json",
+				    data: JSON.stringify(ids),
+				    success: function(r){
+						if(r.code == 0){
+							alert('删除成功', function(){
+	                            vm.reload();
+							});
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			
+			});
+		},
+		get: function(id){
+			$.get(baseURL + "/manage/managestudent/info/"+id, function(result){
+				vm.student= result.data;
+				vm.dialog();
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '330px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/manage/managestudent/save",
+					    data: JSON.stringify(vm.student),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/manage/managestudent/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '学号', name: 'sno', index: "sno", width: 45, key: true, sortable: false },
+			{ label: '姓名', name: 'sname', width: 75, sortable: false },
+			{ label: '班级', name: 'class_', width: 75, sortable: false },
+			{ label: '院系', name: 'department', width: 75, sortable: false },
+
+
+		
+        ],
+		viewrecords: false,
+        height: 385,
+        rowNum: 10,
+		rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="学生信息管理" pageTitle="学生信息管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.sname" @keyup.enter="query" placeholder="学生名">
+	</div>
+	<a class="btn btn-default" @click="query">查询学生</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增学生</a>
+	<a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;更新学生信息</a>
+	<a class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除学生信息</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">学生名字</div>
+		   	<div class="col-sm-10"><input type="text" class="form-control" v-model="student.sname" placeholder="学生名字"/></div>
+		    
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">班级</div>
+		   	<div class="col-sm-10"><input type="text" class="form-control" v-model="student.class_" placeholder="班级"/></div>  
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">院系</div>
+		   	<div class="col-sm-10"><input type="text" class="form-control" v-model="student.department" placeholder="班级"/></div>  
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">登录密码</div>
+		   	<div class="col-sm-10"><input type="password" class="form-control" v-model="student.spassword" placeholder="密码"/></div>  
+		</div>
+	</form>
+</div>
+</@layout.doContent>

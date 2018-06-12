@@ -1,0 +1,241 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+<script src="${rc.contextPath}/libs/ajaxupload.js"></script>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		q : {
+			name : ""
+		},
+		title : null,
+		disabled : false,
+		advertisement : {
+		},
+		isShowList : [
+			{id:1,name:"显示"},
+			{id:2,name:"不显示"}
+		]
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'name': vm.q.name},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "新增广告";
+			vm.advertisement = {isShow:1};
+			vm.disabled = false;
+			
+			vm.dialog();
+		},
+		update: function(id){			
+			vm.title = "修改广告";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		del: function(id){
+			var ids = null;
+			if(id != null || id != undefined){
+				ids = [];
+				ids.push(id);
+			} else {
+				ids = getSelectedRows();
+			}
+			if(ids == null){
+				alert("请先选择删除的行!")
+				return ;
+			}
+			confirm('确定要删除选中的记录？', function(){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/advertisement/delete",
+	                contentType: "application/json",
+				    data: JSON.stringify(ids),
+				    success: function(r){
+						if(r.code == 0){
+							alert('删除成功', function(){
+	                            vm.reload();
+							});
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			
+			});
+		},
+		get: function(id){
+			$.get(baseURL + "/api/advertisement/info/"+id, function(result){
+				vm.advertisement = result.data;
+				vm.dialog();
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '390px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/api/advertisement/save",
+					    data: JSON.stringify(vm.advertisement),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/advertisement/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '广告ID', name: 'id', index: "id", width: 45, key: true, sortable: false },
+			{ label: '广告名称', name: 'title', width: 75, sortable: false },
+			{ label: '广告描述', name: 'description', width: 75, sortable: false },
+			{ label: '连接地址', name: 'url', width: 75, sortable: false },
+			{ label: '广告图片', name: 'img', width: 90, sortable: false, formatter: function(value, options, row){
+					return '<img style="width:200px; height:100px;" src="'+ baseURL + value +'" />';
+				}
+			},
+			{ label: '是否显示', name: 'isShow', width: 80, sortable: false, formatter: function(value, options, row){
+				return value === 2 ? 
+					'<span class="label label-danger">不显示</span>' : 
+					'<span class="label label-success">显示</span>';
+			}},
+			{ label: '操作', name: 'id', index: "id", width: 80, sortable: false, formatter: function(value, options, row){
+				return '<a class="btn btn-primary" onclick="vm.update('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a> &nbsp;&nbsp;' + 
+						'<a class="btn btn-primary" onclick="vm.del('+value+')"><i class="fa fa-trash-o"></i>&nbsp;删除</a>';
+			}},
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 10,
+		rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+	
+	new AjaxUpload('#upload', {
+        action: baseURL + '/api/upload/file',
+        name: 'file',
+        autoSubmit:true,
+        responseType:"json",
+        onSubmit:function(file, extension){
+            if (!(extension && /^(jpg|jpeg|png|gif)$/.test(extension.toLowerCase()))){
+                alert('只支持jpg、png、gif格式的图片！');
+                return false;
+            }
+        },
+        onComplete : function(file, r){
+            if(r.code == 0){
+            	$("#upload").val(r.url);
+                vm.advertisement.img = r.url;
+                alert("上传成功!")
+            }else{
+                alert(r.msg);
+            }
+        }
+    });
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="广告管理" contentLevel="内容管理" pageTitle="广告管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="广告名称">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+	<a class="btn btn-primary" onclick="vm.del()"><i class="fa fa-trash-o"></i>&nbsp;批量删除</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">广告名称</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="advertisement.title" placeholder="广告名称"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">广告描述</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="advertisement.description" placeholder="广告描述"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">广告地址</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="advertisement.url" placeholder="广告地址"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">广告图片</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" id="upload" v-model="advertisement.img" placeholder="广告图片"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">是否显示</div>
+		   	<div class="col-sm-10">
+			   	<label v-for="item in isShowList" class="checkbox-inline">
+				  <input type="radio" name="isShow" :value="item.id" v-model="advertisement.isShow">{{item.name}}
+				</label>
+			</div>
+		</div>
+	</form>
+</div>
+</@layout.doContent>

@@ -1,0 +1,25 @@
+package com.ewaytek.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.ewaytek.model.StaffProcess;
+
+public interface StaffProcessRepository extends JpaRepository<StaffProcess, Integer>, JpaSpecificationExecutor<StaffProcess> {
+
+	@Query("from StaffProcess d where d.year = :year")
+	StaffProcess findProcessByYear(@Param("year") Integer year);
+	
+	@Query("select Distinct d.year from StaffProcess d")
+	List<Integer> findDistinctYear();
+	
+	@Query("select Distinct d.year from StaffProcess d order by d.year desc")
+	List<Integer> findDistinctYearOrderDesc();
+	
+	@Query(value = "select * from staff_process d order by SPro_ID desc limit 1", nativeQuery=true)
+	StaffProcess fetchCurrent();
+}

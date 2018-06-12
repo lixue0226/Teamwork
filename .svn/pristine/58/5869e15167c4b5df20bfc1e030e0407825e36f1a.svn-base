@@ -1,0 +1,115 @@
+package com.ewaytek.model.pojo;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+public class DepartmentDemocracyEx {
+
+	private int id;
+	private int abstention;
+	private int dFinal;
+	private int good;
+	private int normal;
+	private int number;
+	private int top;
+	private int weak;
+	private int depId;
+	private int depLevel;
+	private String depName;
+	private String message;
+	
+	public DepartmentDemocracyEx(){
+		
+	}
+	
+	public DepartmentDemocracyEx(int id, int depId, int depLevel, String depName, int number, int top, int good, int normal, int week, int abstention, int dFinal){
+		this.id = id;
+		this.depId = depId;
+		this.depLevel = depLevel;
+		this.depName = depName;
+		this.number = number;
+		this.top = top;
+		this.good = good;
+		this.normal = normal;
+		this.weak = week;
+		this.abstention = abstention;
+		this.dFinal = dFinal;
+	}
+	
+	public int getAbstention() {
+		return abstention;
+	}
+	public void setAbstention(int abstention) {
+		this.abstention = abstention;
+	}
+	public int getdFinal() {
+		return dFinal;
+	}
+	public void setdFinal(int dFinal) {
+		this.dFinal = dFinal;
+	}
+	public int getGood() {
+		return good;
+	}
+	public void setGood(int good) {
+		this.good = good;
+	}
+	public int getNormal() {
+		return normal;
+	}
+	public void setNormal(int normal) {
+		this.normal = normal;
+	}
+	public int getNumber() {
+		return number;
+	}
+	public void setNumber(int number) {
+		this.number = number;
+	}
+	public int getTop() {
+		return top;
+	}
+	public void setTop(int top) {
+		this.top = top;
+	}
+	public int getWeak() {
+		return weak;
+	}
+	public void setWeak(int weak) {
+		this.weak = weak;
+	}
+	public int getDepId() {
+		return depId;
+	}
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+	public String getDepName() {
+		return depName;
+	}
+	public void setDepName(String depName) {
+		this.depName = depName;
+	}
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepLevel() {
+		return depLevel;
+	}
+
+	public void setDepLevel(int depLevel) {
+		this.depLevel = depLevel;
+	}
+}

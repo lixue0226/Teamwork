@@ -1,0 +1,484 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+<style type="text/css">
+td.bootstrap_dropdown {
+    overflow:visible !important;
+    white-space: normal !important;
+}
+.ui-jqgrid .ui-jqgrid-btable tbody tr.jqgrow td {
+    overflow: visible;
+    white-space: pre;
+    padding-right: 2px;
+}
+</style>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript" src="${rc.contextPath}/libs/echarts.common.min.js"></script>
+<script type="text/javascript">
+
+var types = [
+	{ 
+		type :'Leader',
+		colModel : [
+			{ label: '单位ID', name: 'depId', index: "id", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '单位名称', name: 'depName', width: 75, sortable: false },
+			{ label: '评价结果', name: 'leader', width: 75, sortable: false,formatter:function(value, options, row){
+				return ["","差班子","一般班子","较好班子","好班子"][value];
+			} },
+			{ label: '评价年份', name: 'year', width: 75, sortable: false },
+		]
+	},
+	{ 
+		type :'Comment',
+		colModel : [
+			{ label: '单位ID', name: 'depId', index: "id", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '单位名称', name: 'depName', width: 75, sortable: false },
+			{ label: '评价结果', name: 'comment', width: 75, sortable: false,formatter:function(value, options, row){
+				return ["","差班子","一般班子","较好班子","好班子"][value];
+			}  },
+			{ label: '评价年份', name: 'year', width: 75, sortable: false },
+		]
+	},
+	{ 
+		type :'Achievement',
+		colModel : [
+			{ label: '单位ID', name: 'depId', index: "id", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '单位名称', name: 'depName', width: 75, sortable: false },
+			{ label: '评价结果', name: 'achievement', width: 75, sortable: false, formatter: function(value, options, row){
+				if(row.depLevel == 1){
+					return ["","差班子","一般班子","较好班子","好班子"][value];
+				} else {
+					return value;
+				}
+			} },
+			{ label: '评价年份', name: 'year', width: 75, sortable: false },
+		]
+	},
+	{ 
+		type :'Democracy',
+		colModel : [
+			{ label: '单位ID', name: 'depId', index: "id", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '单位名称', name: 'depName', width: 75, sortable: false },
+			{ label: '评价结果', name: 'democracy', width: 75, sortable: false,formatter:function(value, options, row){
+				return ["","差班子","一般班子","较好班子","好班子"][value];
+			}  },
+			{ label: '评价年份', name: 'year', width: 75, sortable: false },
+		]
+	},
+];
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 10; i > 0; i--){
+	yearlist.push(date - i + 1);
+}
+
+data = $.extend(
+	data,{
+		q : {
+			name : ""
+		},
+		title : null,
+		disabled : false,
+		departmentId : 0,
+		department : {
+		},
+		isShowList : [
+			{id:1,name:"显示"},
+			{id:2,name:"不显示"}
+		]
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'name': vm.q.name},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "新增单位";
+			vm.department = {isShow:1};
+			vm.disabled = false;
+			
+			vm.dialog();
+		},
+		update: function(id){
+			vm.title = "修改单位";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		chart : function(id){
+			$.get(baseURL + "/api/department/chart/" + id, function(result){
+				var chart = echarts.init(document.getElementById('chart'));
+				var option = {
+					    title: {
+					        text: '历年结果',
+					    },
+					    tooltip: {
+					        trigger: 'axis',
+					        formatter : function(params){
+					        	return ["","差","一般","较好","好"][params];
+					        }
+					    },
+					    xAxis:  {
+					        type: 'category',
+					        boundaryGap: false,
+					        data: yearlist
+					    },
+					    yAxis: {
+					        type: 'value',
+					        axisLabel: {
+					            formatter: function(value){
+					            	return ["","差","一般","较好","好"][value];
+					            }
+					        }
+					    },
+					    series: [
+					        {
+					            name:'结果',
+					            type:'line',
+					            data: result.data,
+					            markPoint: {
+					                data: [
+					                    {type: 'max', name: '最大值'}
+					                ]
+					            }
+					        }
+					    ]
+					};
+				chart.setOption(option);
+				layer.open({
+					type: 1,
+					skin: 'layui-layer-molv',
+					title: "单位考核结果汇总",
+					area: ['570px', '430px'],
+					shadeClose: false,
+					content: jQuery("#chartLayer"),
+					btn: ['关闭']
+				});
+			});
+		},
+		leader : function(id) {
+			var type = "Leader"
+			
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: "领导评价汇总",
+				area: ['770px', '570px'],
+				shadeClose: false,
+				content: jQuery("#layer" + type),
+				btn: ['关闭']
+			});
+			
+			var page = $("#jqGrid" + type).jqGrid('getGridParam','page');
+			$("#jqGrid" + type).jqGrid('setGridParam',{ 
+                postData:{'id': id},
+                page:page
+            }).trigger("reloadGrid");
+		}, 
+		comment : function(id) {
+			var type = "Comment"
+				
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: "政策评价汇总",
+				area: ['770px', '570px'],
+				shadeClose: false,
+				content: jQuery("#layer" + type),
+				btn: ['关闭']
+			});
+			
+			var page = $("#jqGrid" + type).jqGrid('getGridParam','page');
+			$("#jqGrid" + type).jqGrid('setGridParam',{ 
+                postData:{'id': id},
+                page:page
+            }).trigger("reloadGrid");
+		}, 
+		achievement : function(id){
+			var type = "Achievement"
+				
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: "绩效办评价汇总",
+				area: ['770px', '570px'],
+				shadeClose: false,
+				content: jQuery("#layer" + type),
+				btn: ['关闭']
+			});
+			
+			var page = $("#jqGrid" + type).jqGrid('getGridParam','page');
+			$("#jqGrid" + type).jqGrid('setGridParam',{ 
+                postData:{'id': id},
+                page:page
+            }).trigger("reloadGrid");
+		}, 
+		democracy : function(id){
+			var type = "Democracy"
+				
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: "民主测评汇总",
+				area: ['770px', '570px'],
+				shadeClose: false,
+				content: jQuery("#layer" + type),
+				btn: ['关闭']
+			});
+			
+			var page = $("#jqGrid" + type).jqGrid('getGridParam','page');
+			$("#jqGrid" + type).jqGrid('setGridParam',{ 
+                postData:{'id': id},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		del: function(id){
+			var ids = null;
+			if(id != null || id != undefined){
+				ids = [];
+				ids.push(id);
+			} else {
+				ids = getSelectedRows();
+			}
+			if(ids == null){
+				alert("请先选择删除的行!")
+				return ;
+			}
+			confirm('确定要删除选中的记录？', function(){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/department/delete",
+	                contentType: "application/json",
+				    data: JSON.stringify(ids),
+				    success: function(r){
+						if(r.code == 0){
+							alert('删除成功', function(){
+	                            vm.reload();
+							});
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			
+			});
+		},
+		get: function(id){
+			$.get(baseURL + "/api/department/info/"+id, function(result){
+				vm.department = result.data;
+				vm.dialog();
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '330px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/api/department/save",
+					    data: JSON.stringify(vm.department),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/department/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '单位ID', name: 'id', index: "id", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '单位名称', name: 'name', width: 75, sortable: false },
+			{ label: '单位全称', name: 'fullname', width: 75, sortable: false },
+			{ label: '单位描述', name: 'description', width: 90, sortable: false },
+			{ label: '城市编号', name: 'city', index: "create_time", width: 80, sortable: false},
+			/*
+			{ label: '是否显示', name: 'isShow', width: 80, sortable: false, formatter: function(value, options, row){
+				return value === 2 ? 
+					'<span class="label label-danger">不显示</span>' : 
+					'<span class="label label-success">显示</span>';
+			}},*/
+			{ label: '操作', name: 'id', index: "id", width: 80, sortable: false, formatter: function(value, options, row){
+				return '<div class="btn-group"><button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">汇总<span class="caret"></span></button>' +
+				 	   '<ul class="dropdown-menu" role="menu">' + 
+				 	   '<li><a onclick="vm.chart('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;单位结果图表</a></li>' +
+				 	   '<li><a onclick="vm.democracy('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;民主测评汇总</a></li>' +
+				 	   '<li><a onclick="vm.comment('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;政策评价汇总</a></li>' +
+				 	   '<li><a onclick="vm.leader('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;领导评价汇总</a></li>' +
+				 	   '<li><a onclick="vm.achievement('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;绩效办评价汇总</a></li>' +
+				 	   '</ul></div> &nbsp;&nbsp;' +
+				        '<a class="btn btn-primary" onclick="vm.update('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a> &nbsp;&nbsp;' + 
+						'<a class="btn btn-primary" onclick="vm.del('+value+')"><i class="fa fa-trash-o"></i>&nbsp;删除</a>';
+			}},
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 100,
+		rowList : [10,30, 50, 100, 150, 200],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+	
+	for(var i = 0; i < types.length; i++){
+		var data = types[i];
+		
+		$("#jqGrid" + data.type).jqGrid({
+	        url: baseURL + '/api/department/list/' + data.type.toLowerCase(),
+	        datatype: "json",
+	        colModel: data.colModel,
+			viewrecords: false,
+	        height: 385,
+	        rowNum: 100,
+			rowList : [100, 150, 200],
+	        rownumbers: true, 
+	        rownumWidth: 25, 
+	        autowidth:false,
+	        multiselect: false,
+	        pager: "#jqGridPager" + data.type,
+	        sortable: false,
+	        jsonReader : {
+	            root: "page.list",
+	            page: "page.currPage",
+	            total: "page.totalPage",
+	            records: "page.totalCount"
+	        },
+	        postData : {
+	        	id : vm.departmentId
+	        },
+	        prmNames : {
+	            page:"page", 
+	            rows:"limit", 
+	            order: "order"
+	        },
+	        gridComplete:function(){
+	        	//隐藏grid底部滚动条
+	        	$("#jqGrid" + data.type).closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+	        }
+	    });
+		
+		$("#jqGrid" + data.type).setGridWidth(765);
+	}
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="部门管理" contentLevel="部门考核" pageTitle="部门管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="单位名称">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+	<a class="btn btn-primary" onclick="vm.del()"><i class="fa fa-trash-o"></i>&nbsp;批量删除</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="chartLayer" style="display:none; padding: 10px;">
+	<div id="chart" style="width:550px; height:300px;">
+	</div>
+</div>
+<div id="layerDemocracy" style="display: none;">
+	<table id="jqGridDemocracy"></table>
+	<div id="jqGridPagerDemocracy"></div>
+</div>
+<div id="layerComment" style="display: none;">
+	<table id="jqGridComment" style="width:500px;"></table>
+	<div id="jqGridPagerComment"></div>
+</div>
+<div id="layerLeader" style="display: none;">
+	<table id="jqGridLeader"></table>
+	<div id="jqGridPagerLeader"></div>
+</div>
+<div id="layerAchievement" style="display: none;">
+	<table id="jqGridAchievement"></table>
+	<div id="jqGridPagerAchievement"></div>
+</div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">单位名称</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="department.name" placeholder="单位名称"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">单位全称</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="department.fullname" placeholder="单位名称"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">单位描述</div>
+		   	<div class="col-sm-10">
+		   	  <textarea v-model="department.description" class="form-control"></textarea>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">城市编号</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="department.city" placeholder="城市编号"/>
+		    </div>
+		</div>
+		<!-- 
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">是否显示</div>
+		   	<div class="col-sm-10">
+			   	<label v-for="item in isShowList" class="checkbox-inline">
+				  <input type="radio" name="isShow" :value="item.id" v-model="department.isShow">{{item.name}}
+				</label>
+			</div>
+		</div>
+		 -->
+	</form>
+</div>
+</@layout.doContent>

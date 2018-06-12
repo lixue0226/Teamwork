@@ -1,0 +1,132 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_evaluation database table.
+ * 
+ */
+@Entity
+@Table(name="staff_evaluation")
+@NamedQuery(name="StaffEvaluation.findAll", query="SELECT s FROM StaffEvaluation s")
+public class StaffEvaluation implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int depId;
+	private int adjust;
+	private int comment;
+	private int democracy;
+	private int dfinal;
+	private int isRecommend;
+	private int year;
+	private int type;
+	private int staId;
+
+	public StaffEvaluation() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="SEva_ID")
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Column(name="Dep_ID")
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+
+	@Column(name="SEva_adjust")
+	public int getAdjust() {
+		return this.adjust;
+	}
+
+	public void setAdjust(int adjust) {
+		this.adjust = adjust;
+	}
+
+
+	@Column(name="SEva_comment")
+	public int getComment() {
+		return this.comment;
+	}
+
+	public void setComment(int comment) {
+		this.comment = comment;
+	}
+
+
+	@Column(name="SEva_democracy")
+	public int getDemocracy() {
+		return this.democracy;
+	}
+
+	public void setDemocracy(int democracy) {
+		this.democracy = democracy;
+	}
+
+
+	@Column(name="SEva_final")
+	public int getDfinal() {
+		return this.dfinal;
+	}
+
+	public void setDfinal(int dfinal) {
+		this.dfinal = dfinal;
+	}
+
+
+	@Column(name="SEva_is_recommend")
+	public int getIsRecommend() {
+		return this.isRecommend;
+	}
+
+	public void setIsRecommend(int isRecommend) {
+		this.isRecommend = isRecommend;
+	}
+
+
+	@Column(name="SEva_year")
+	public int getYear() {
+		return this.year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+
+	@Column(name="SIsc_type")
+	public int getType() {
+		return this.type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+
+	@Column(name="Sta_ID")
+	public int getStaId() {
+		return this.staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+}

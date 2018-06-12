@@ -1,0 +1,339 @@
+package com.ewaytek.manage.api.controller.department;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.Department;
+import com.ewaytek.model.DepartmentDemocracy;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.pojo.DepartmentDemocracyEx;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+import com.ewaytek.repository.DepartmentDemocracyRepository;
+import com.ewaytek.repository.DepartmentEvaluationRepository;
+import com.ewaytek.repository.DepartmentProcessRepository;
+import com.ewaytek.repository.DepartmentRepository;
+import com.ewaytek.repository.DepartmentTreeRepository;
+
+@Controller
+@RequestMapping("/api/department/democracy")
+public class DepartmentDemocracyController {
+	
+	/**
+	 * 上传目录
+	 */
+	public static final String ROOT = "upload/democracy";  
+	
+	@Autowired
+	private DepartmentDemocracyRepository departmentDemocracyRepository;
+	
+	@Autowired
+	private DepartmentTreeRepository departmentTreeRepository;
+	
+	@Autowired
+	private DepartmentEvaluationRepository departmentEvaluationRepository;
+	
+	@Autowired
+	private DepartmentProcessRepository departmentProcessRepository;
+	
+	@RequestMapping("/list/")
+	@ResponseBody
+	public Map<String,Object> department(
+			@RequestParam(value = "year", defaultValue = "0") Integer year, 
+			@RequestParam(value = "name", defaultValue = "") final String name, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer  limit){
+		try{
+			DepartmentProcess departmentProcess = null;
+			if(year == 0){
+				departmentProcess = departmentProcessRepository.fetchCurrent();
+				year = departmentProcess.getYear();
+			} else {
+				departmentProcess = departmentProcessRepository.findProcessByYear(year);
+			}
+			
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Page<DepartmentDemocracyEx> list = departmentDemocracyRepository.findDepartmentDemocracy(year, name, pageable);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result).put("process", departmentProcess);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/info/{id}")
+	@ResponseBody
+	public Map<String,Object> info(
+			@PathVariable("id") Integer id){
+		try{
+			DepartmentDemocracyEx info = departmentDemocracyRepository.findOneDepartmentDemocracy(id);
+			return Result.ok().put("data", info);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	/**
+	 * 计算最终结果
+	 * @param departmentDemocracy
+	 * @return
+	 */
+	private int getDFinal(DepartmentDemocracy departmentDemocracy){
+		if(departmentDemocracy.getNumber() == 0){
+			return 0;
+		}
+		if(departmentDemocracy.getTop() * 100.0 / departmentDemocracy.getNumber() > 90){
+			return 4;
+		} else if((departmentDemocracy.getTop() + departmentDemocracy.getGood()) * 100.0 / departmentDemocracy.getNumber() > 70) {
+			return 3;
+		} else if(departmentDemocracy.getWeak() * 100.0 / departmentDemocracy.getNumber() < 30) {
+			return 2;
+		} else {
+			return 1;
+		}
+	}
+	
+	@RequestMapping("/save/info")
+	@ResponseBody
+	public Map<String,Object> saveInfo(
+			@RequestBody DepartmentDemocracyEx departmentDemocracyEx){
+		try{
+			DepartmentDemocracy departmentDemocracy = departmentDemocracyRepository.findOne(departmentDemocracyEx.getId());
+			
+			if(departmentDemocracy == null){
+				return Result.error("保存失败");
+			}
+			
+			int year = departmentDemocracy.getYear();
+			DepartmentProcess departmentProcess = departmentProcessRepository.findProcessByYear(year);
+			if(departmentProcess == null || departmentProcess.getComplete() == 1){
+				return Result.error("保存失败");
+			}
+			
+			if(departmentDemocracyEx.getNumber() != departmentDemocracyEx.getTop() + departmentDemocracyEx.getGood() + departmentDemocracyEx.getNormal() + departmentDemocracyEx.getWeak() + departmentDemocracyEx.getAbstention()){
+				return Result.error("数据信息不正确，保存失败");
+			}
+			
+			departmentDemocracy.setDepId(departmentDemocracyEx.getDepId());
+			departmentDemocracy.setNumber(departmentDemocracyEx.getNumber());
+			departmentDemocracy.setTop(departmentDemocracyEx.getTop());
+			departmentDemocracy.setGood(departmentDemocracyEx.getGood());
+			departmentDemocracy.setNormal(departmentDemocracyEx.getNormal());
+			departmentDemocracy.setWeak(departmentDemocracyEx.getWeak());
+			departmentDemocracy.setAbstention(departmentDemocracyEx.getAbstention());
+			
+			// 计算结果
+			departmentDemocracy.setDFinal(this.getDFinal(departmentDemocracy));
+			
+			departmentDemocracyRepository.save(departmentDemocracy);
+			
+			departmentEvaluationRepository.updateDemocracyByDepIDAndYear(
+				departmentDemocracy.getDFinal(), 
+				departmentDemocracy.getDepId(), 
+				departmentDemocracy.getYear()
+			);
+			return Result.ok("保存成功");
+		} catch (Exception e){
+			return Result.error("保存失败");
+		}
+	}
+	
+	@RequestMapping("/upload")
+	@ResponseBody
+	public Map<String,Object> upload(@RequestParam("file") MultipartFile file){
+		try{
+			
+			if(file.isEmpty()){
+				return Result.error("上传文件不能为空!");
+			}
+			
+			File dir = new File(ROOT);
+			if(!dir.exists()){
+				dir.mkdirs();
+			}
+			
+			String filename = String.valueOf(System.currentTimeMillis()) + ".xls";
+			Files.copy(file.getInputStream(), Paths.get(ROOT, filename));  
+			String url = "/" + ROOT + "/" + filename;
+			
+			// 获取最新的一条数据
+			DepartmentProcess departmentProcess = departmentProcessRepository.fetchCurrent();
+			
+			if(departmentProcess.getDemocracy() == 1){
+				return Result.error("已经完成民主测评，不需要在进行民主测评导入!");
+			}
+			
+			if(departmentProcess.getComplete() == 1){
+				return Result.error("已经完成考评，不能进行导入!");
+			}
+			
+			// 解析文件
+			InputStream inputStream = new FileInputStream(ROOT + "/" + filename);
+			HSSFWorkbook hssfWorkbook = new HSSFWorkbook(inputStream);
+			
+			// 获取需要评价的所有的单位
+			List<DepartmentDemocracyEx> listAll = departmentDemocracyRepository.findDepartmentDemocracy(departmentProcess.getYear(), "");
+			Map<String, DepartmentDemocracyEx> mapAll = new HashMap<String, DepartmentDemocracyEx>();
+			for(int i = 0; i < listAll.size(); i++){
+				
+				String name = listAll.get(i).getDepName().trim();
+				
+				mapAll.put(name, listAll.get(i));
+			}
+			
+			List<DepartmentDemocracyEx> departmentDemocracys = new ArrayList<DepartmentDemocracyEx>();
+			HSSFSheet sheet = hssfWorkbook.getSheetAt(0);
+			if(sheet == null){
+				return Result.ok().put("data", departmentDemocracys);
+			}
+			
+			for(int i = 1; i <= sheet.getLastRowNum(); i++){
+				HSSFRow row = sheet.getRow(i);
+				DepartmentDemocracyEx departmentDemocracy = new DepartmentDemocracyEx();
+				
+				String depName = row.getCell(0).getStringCellValue().trim();
+				departmentDemocracy.setDepName(depName);
+				
+				int number = (int)row.getCell(1).getNumericCellValue();
+				departmentDemocracy.setNumber(number);
+				
+				int top = (int)row.getCell(2).getNumericCellValue();
+				departmentDemocracy.setTop(top);
+				
+				int good = (int)row.getCell(3).getNumericCellValue();
+				departmentDemocracy.setGood(good);
+				
+				int normal = (int)row.getCell(4).getNumericCellValue();
+				departmentDemocracy.setNormal(normal);
+				
+				int weak = (int)row.getCell(5).getNumericCellValue();
+				departmentDemocracy.setWeak(weak);
+				
+				int abstention = (int)row.getCell(6).getNumericCellValue();
+				departmentDemocracy.setAbstention(abstention);
+				
+				if(mapAll.containsKey(depName)){
+					departmentDemocracy.setDepId(mapAll.get(depName).getDepId());
+				} else {
+					departmentDemocracy.setMessage("部门名称不存在");
+				}
+				
+				if(number != top + good + normal + weak + abstention){
+					departmentDemocracy.setMessage("数据不正确，所有的和不会总数!");
+				}
+				
+				departmentDemocracys.add(departmentDemocracy);
+			}
+			
+			
+			return Result.ok().put("data", departmentDemocracys);
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/save")
+	@ResponseBody
+	public Map<String,Object> save(@RequestBody List<DepartmentDemocracyEx> list){
+		try{
+			
+			// 获取最新的一条数据
+			DepartmentProcess departmentProcess = departmentProcessRepository.fetchCurrent();
+			
+			if(departmentProcess.getDemocracy() == 1){
+				return Result.error("已经完成民主测评，不需要在进行民主测评导入!");
+			}
+			
+			if(departmentProcess.getComplete() == 1){
+				return Result.error("已经完成考评，不能进行导入!");
+			}
+			
+			List<DepartmentDemocracy> listAll = departmentDemocracyRepository.findDepartmentDemocracy(departmentProcess.getYear());
+			Map<Integer, DepartmentDemocracy> mapAll = new HashMap<Integer, DepartmentDemocracy>();
+			for(int i = 0; i < listAll.size(); i++){
+				mapAll.put(listAll.get(i).getDepId(), listAll.get(i));
+			}
+			
+			for(int i = 0; i < list.size(); i++){
+				
+				DepartmentDemocracyEx departmentDemocracyEx = list.get(i);
+				
+				if(departmentDemocracyEx.getMessage() != null && !departmentDemocracyEx.getMessage().equals("") ){
+					continue;
+				}
+				
+				DepartmentDemocracy departmentDemocracy = null;
+				
+				if(mapAll.containsKey(departmentDemocracyEx.getDepId())){
+					departmentDemocracy = mapAll.get(departmentDemocracyEx.getDepId());
+					
+					departmentDemocracy.setNumber(departmentDemocracyEx.getNumber());
+					departmentDemocracy.setTop(departmentDemocracyEx.getTop());
+					departmentDemocracy.setGood(departmentDemocracyEx.getGood());
+					departmentDemocracy.setWeak(departmentDemocracyEx.getWeak());
+					departmentDemocracy.setNormal(departmentDemocracyEx.getNormal());
+					departmentDemocracy.setAbstention(departmentDemocracyEx.getAbstention());
+					
+					departmentDemocracy.setDFinal(getDFinal(departmentDemocracy));
+					
+					// 计算公式，计算最终结果
+					departmentDemocracyRepository.save(departmentDemocracy);
+					
+					departmentEvaluationRepository.updateDemocracyByDepIDAndYear(
+						departmentDemocracy.getDFinal(), 
+						departmentDemocracy.getDepId(), 
+						departmentDemocracy.getYear()
+					);
+				}
+			}
+			
+			return Result.ok("保存成功");
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+}

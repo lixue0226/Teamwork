@@ -1,0 +1,118 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.Date;
+
+
+/**
+ * The persistent class for the cms_ad database table.
+ * 
+ */
+@Entity
+@Table(name="cms_ad")
+@NamedQuery(name="Advertisement.findAll", query="SELECT a FROM Advertisement a")
+public class Advertisement implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private Date createAt;
+	private int creator;
+	private String img;
+	private int position;
+	private String title;
+	private String description;
+	private String url;
+	private int isShow;
+
+	public Advertisement() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="create_at")
+	public Date getCreateAt() {
+		return this.createAt;
+	}
+
+	public void setCreateAt(Date createAt) {
+		this.createAt = createAt;
+	}
+
+
+	public int getCreator() {
+		return this.creator;
+	}
+
+	public void setCreator(int creator) {
+		this.creator = creator;
+	}
+
+
+	public String getImg() {
+		return this.img;
+	}
+
+	public void setImg(String img) {
+		this.img = img;
+	}
+
+
+	public int getPosition() {
+		return this.position;
+	}
+
+	public void setPosition(int position) {
+		this.position = position;
+	}
+
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+
+	public int getIsShow() {
+		return isShow;
+	}
+
+
+	public void setIsShow(int show) {
+		this.isShow = show;
+	}
+
+
+	public String getDescription() {
+		return description;
+	}
+
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+
+	public String getUrl() {
+		return url;
+	}
+
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+}

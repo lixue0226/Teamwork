@@ -1,0 +1,24 @@
+package com.ewaytek.repository;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.ewaytek.model.StaffResume;
+import com.ewaytek.model.pojo.StaffResumeEx;
+
+public interface StaffResumeRepository extends JpaRepository<StaffResume, Integer>,JpaSpecificationExecutor<StaffResume> {
+
+	@Query("select new com.ewaytek.model.pojo.StaffResumeEx(s.id, s.depId, " +
+			"d.name, s.assignmentNow, s.assignmentOld, s.assignmentWill, " +
+			"s.file, s.fullEducation," + 
+			"s.fullMajor, s.health, s.partEducation, s.partMajor, s.reasonsAppointmentRemoval, " +
+			"s.reportComment, s.reportComment2, " +
+			"s.reportComment3, s.reportDepId, s.reportDepId2, s.reportDepId3, " + 
+			"s.technologyDuty, s.technologyMajor, s.currentDuty, " +
+			"s.ddate, s.staId) from StaffResume s ,Department d where d.id = s.depId and s.staId = :id ")
+	Page<StaffResumeEx> findStaffResumeById(@Param("id") int id, Pageable pageable);
+}

@@ -1,0 +1,16 @@
+package com.ewaytek.repository;
+
+import org.aspectj.weaver.patterns.IfPointcut.IfFalsePointcut;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.ewaytek.model.StaffActivity;
+
+public interface StaffActivityRepository extends JpaRepository<StaffActivity, Integer>,JpaSpecificationExecutor<StaffActivity> {
+	@Query("from StaffActivity u where u.staId = :staId")
+	StaffActivity findActivityByStaff(@Param("staId") int id);
+
+	
+}

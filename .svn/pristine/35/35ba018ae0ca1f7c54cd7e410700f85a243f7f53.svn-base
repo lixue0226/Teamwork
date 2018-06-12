@@ -1,0 +1,44 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_layer database table.
+ * 
+ */
+@Entity
+@Table(name="staff_layer")
+@NamedQuery(name="StaffLayer.findAll", query="SELECT s FROM StaffLayer s")
+public class StaffLayer implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private String name;
+
+	public StaffLayer() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="SLay_ID")
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Column(name="SCom_Name")
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+}

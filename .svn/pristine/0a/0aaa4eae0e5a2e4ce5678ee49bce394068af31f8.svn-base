@@ -1,0 +1,76 @@
+package com.ewaytek.manage.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.alibaba.fastjson.JSON;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.model.Department;
+import com.ewaytek.model.User;
+import com.ewaytek.repository.DepartmentRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * 系统管理部分
+ * @author zhangjingpu
+ *
+ */
+@Configuration
+@RequestMapping("/manage")
+public class ManageSysController {
+	
+	@Autowired
+	private DepartmentRepository departmentRepository;
+	
+	@RequestMapping("/dashboard")
+	public String dashboard(){
+		
+		User user = ShiroUtils.getUserEntity();
+		if(user.getType() == 0){
+			// 系统管理员账号
+			return "manage/department/dashboard";
+		} else {
+			// 部门管理员用户
+			return "manage/staff/dashboard";
+		}
+		
+		// return "manage/department/dashboard";
+	}
+	
+	/**
+	 * 用户管理部分
+	 * @return
+	 */
+	@RequestMapping("/sys/user")
+	public String user(){
+		return "manage/sys/user";
+	}
+	
+	/**
+	 * 单位管理员部分
+	 * @return
+	 */
+	@RequestMapping("/sys/staff")
+	public String staff(Model model){
+		
+		List<Department> departments = departmentRepository.findAll();
+		
+		model.addAttribute("departments", JSON.toJSONString(departments));
+		
+		return "manage/sys/staff";
+	}
+	
+	/**
+	 * 角色管理部分
+	 * @return
+	 */
+	@RequestMapping("/sys/role")
+	public String role(){
+		return "manage/sys/role";
+	}
+}

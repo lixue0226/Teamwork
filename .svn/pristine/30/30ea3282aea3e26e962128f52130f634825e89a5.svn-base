@@ -1,0 +1,151 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.Date;
+
+
+/**
+ * The persistent class for the department_democracy database table.
+ * 
+ */
+@Entity
+@Table(name="department_democracy")
+@NamedQuery(name="DepartmentDemocracy.findAll", query="SELECT d FROM DepartmentDemocracy d")
+public class DepartmentDemocracy implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="Dem_ID")
+	private int id;
+
+	@Column(name="Ddem_abstention")
+	private int abstention;
+
+	@Column(name="Ddem_Final")
+	private int dFinal;
+
+	@Column(name="DDem_good")
+	private int good;
+
+	@Column(name="DDem_nomal")
+	private int normal;
+
+	@Column(name="Ddem_number")
+	private int number;
+
+	@Column(name="DDem_top")
+	private int top;
+
+	@Column(name="DDem_weak")
+	private int weak;
+
+	@Column(name="DDem_year")
+	private int year;
+
+	@Column(name="Dep_ID")
+	private int depId;
+	
+	@Column(name="Dep_level")
+	private int depLevel;
+
+	public DepartmentDemocracy() {
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getAbstention() {
+		return this.abstention;
+	}
+
+	public void setAbstention(int abstention) {
+		this.abstention = abstention;
+	}
+
+	public int getDFinal() {
+		return this.dFinal;
+	}
+
+	public void setDFinal(int dFinal) {
+		this.dFinal = dFinal;
+	}
+
+	public int getGood() {
+		return this.good;
+	}
+
+	public void setGood(int good) {
+		this.good = good;
+	}
+
+	public int getNormal() {
+		return this.normal;
+	}
+
+	public void setNormal(int normal) {
+		this.normal = normal;
+	}
+
+	public int getNumber() {
+		return this.number;
+	}
+
+	public void setNumber(int number) {
+		this.number = number;
+	}
+
+	public int getTop() {
+		return this.top;
+	}
+
+	public void setTop(int top) {
+		this.top = top;
+	}
+
+	public int getWeak() {
+		return this.weak;
+	}
+
+	public void setWeak(int weak) {
+		this.weak = weak;
+	}
+
+	public int getYear() {
+		return this.year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public int getdFinal() {
+		return dFinal;
+	}
+
+	public void setdFinal(int dFinal) {
+		this.dFinal = dFinal;
+	}
+
+	public int getDepLevel() {
+		return depLevel;
+	}
+
+	public void setDepLevel(int depLevel) {
+		this.depLevel = depLevel;
+	}
+}

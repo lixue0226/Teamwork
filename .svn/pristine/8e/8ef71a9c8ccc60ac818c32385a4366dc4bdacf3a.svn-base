@@ -1,0 +1,486 @@
+<#import "layout/layout_staff.html" as layout />
+
+<#macro header>
+<style type="text/css">
+.ui-jqgrid .ui-jqgrid-btable tbody tr.jqgrow td {
+	white-space: normal !important;
+	height:auto;
+	vertical-align:text-top;
+	padding-top:2px;
+	word-break:break-all;
+ }
+</style>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script src="${rc.contextPath}/libs/ajaxupload.js"></script>
+<script type="text/javascript">
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 0; i < 10; i++){
+	yearlist.push({
+		value: date - i,
+		text : date - i
+	})
+}
+
+
+data = $.extend(
+	data,{
+		q : {
+			name : "",
+			year : 0
+		},
+		process : {
+			
+		},
+		job : [
+			{id: 3, name:"党政正职"},
+			{id: 2, name:"市管干部"},
+			{id: 1, name:"县区纪委副书记"},
+			{id: 0, name:"无"}
+		],
+		layers : [
+			{id:4,name:"优秀"},
+			{id:3,name:"称职"},
+			{id:2,name:"基本称职"},
+			{id:1,name:"不称职"}
+		],
+		years : ${years},
+		title : null,
+		disabled : false,
+		evaluation : {
+		},
+		importData : {
+			
+		}
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'year': vm.q.year, 'name': vm.q.name},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			
+		},
+		modify : function(id){
+			vm.title = "修改信息";
+			$.get(baseURL + "/api/department/staff/evaluation/info/"+id, function(result){
+				vm.evaluation = result.data;
+				layer.open({
+					type: 1,
+					skin: 'layui-layer-molv',
+					title: vm.title,
+					area: ['550px', '330px'],
+					shadeClose: false,
+					content: jQuery("#editLayer"),
+					btn: ['确定','取消'],
+					btn1: function (index) {
+						$.ajax({
+							type: "POST",
+						    url: baseURL + "/api/department/staff/evaluation/save/info",
+						    data: JSON.stringify(vm.evaluation),
+						    dataType: "json",
+						    contentType : 'application/json',
+						    success: function(r){
+								if(r.code == 0){
+									layer.close(index);
+									alert(r.msg);
+									vm.reload();
+								}else{
+									alert(r.msg);
+								}
+							}
+						});
+		            }
+				});
+			});
+		},
+		update: function(id, name){
+			vm.title = "统筹考虑";
+			vm.get(id, name);
+		},
+		del: function(){
+			
+		},
+		get: function(id, name){
+			$.get(baseURL + "/api/department/staff/evaluation/info/"+id, function(result){
+				vm.evaluation = result.data;
+				vm.dialog(name);
+			});
+		},
+		calc: function(){
+			$.get(baseURL + "/api/department/staff/evaluation/calc/", function(result){
+				if(result.code == 0){
+					alert(result.msg);
+					vm.reload();
+				} else {
+					alert(result.msg);
+				}
+			});
+		},
+		submitAll: function(){
+			$.get(baseURL + "/api/department/staff/evaluation/submit/", function(result){
+				if(result.code == 0){
+					alert(result.msg);
+					vm.reload();
+				} else {
+					alert(result.msg);
+				}
+			});
+		},
+		dexport : function(){
+			$.get(baseURL + "/api/department/staff/evaluation/export/" + vm.q.year, function(result){
+				if(result.code == 0){
+					$("#download_url").attr("href", baseURL + result.url);
+					layer.open({
+						type: 1,
+						skin: 'layui-layer-molv',
+						title: "考评统计下载",
+						area: ['550px', '300px'],
+						shadeClose: false,
+						content: jQuery("#downloadLayer"),
+						btn: ['取消']
+					});
+				} else {
+					alert(result.msg);
+				}
+			});
+		},
+		dialog: function(name){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '330px'],
+				shadeClose: false,
+				content: jQuery("#" + name),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/api/department/staff/evaluation/save/info",
+					    data: JSON.stringify(vm.evaluation),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/department/staff/evaluation/list/',
+        datatype: "json",
+        colModel: [			
+        	{ label: '编号', name: 'id', index: "id", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '员工编号', name: 'staId', index: "staId", width: 45, key: true, sortable: false },
+			{ label: '姓名', name: 'staName', width: 75, sortable: false },
+			{ label: '职位', name: 'type', width: 60, sortable: false, formatter: function(value, options, row){
+				return ["", "县区纪委副书记", "市管干部", "党政正职"][value];
+			}},
+			{ label: '民主测评', name: 'democracy', width: 60, sortable: false, formatter: function(value, options, row){
+				return ["","不称职","基本称职","称职","优秀"][value];
+			}},
+			{ label: '政策评价', name: 'comment', index: "comment", width: 60, sortable: false, formatter: function(value, options, row){
+				return ["","不称职","基本称职","称职","优秀"][value];
+			}},
+			{ label: '是否推荐', name: 'isRecommend', index: "isRecommend", width: 60, sortable: false, formatter: function(value, options, row){
+				return ["否","是"][value];
+			}},
+			{ label: '调整结果', name: 'adjust', index: "adjust", width: 60, sortable: false, formatter: function(value, options, row){
+				return ["","不称职","基本称职","称职","优秀"][value];
+			}},
+			{ label: '最终结果', name: 'dfinal', index: "dfinal", width: 60, sortable: false, formatter: function(value, options, row){
+				return ["","不称职","基本称职","称职","优秀"][value];
+			}},
+			{ label: '操作', name: 'id', index: "id", width: 150, sortable: false, formatter: function(value, options, row){
+				var process = $("#jqGrid").getGridParam('userData');
+				if(process != null && process.complete != 1){
+					// return '<a class="btn btn-primary" onclick="vm.modify('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>&nbsp;&nbsp;' + 
+					return	'<a class="btn btn-primary" onclick="vm.update('+value+', \'formLayer\')"><i class="fa fa-pencil-square-o"></i>&nbsp;统筹</a>&nbsp;&nbsp;' + 
+						'<a class="btn btn-primary" onclick="vm.update('+value+', \'jobLayer\')"><i class="fa fa-pencil-square-o"></i>&nbsp;职务</a>';
+				} else {
+					return '';
+				}
+				
+			}},
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 100,
+		rowList : [10,30, 50, 100, 150, 200],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: false,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount",
+            userdata: "process"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        postData : {
+        	year : vm.q.year
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        	vm.process = $("#jqGrid").getGridParam('userData');
+        	if(vm.process != null){
+        		vm.q.year = vm.process.year;
+        	}
+        }
+    });
+	
+	new AjaxUpload('#uploadDemocracy', {
+        action: baseURL + '/api/department/staff/democracy/upload',
+        name: 'file',
+        autoSubmit:true,
+        responseType:"json",
+        onSubmit:function(file, extension){
+            if (!(extension && /^(xls)$/.test(extension.toLowerCase()))){
+                alert('只支持xls格式的图片！');
+                return false;
+            }
+        },
+        onComplete : function(file, r){
+            if(r.code == 0){
+            	vm.importData = r.data;
+            	layer.open({
+    				type: 1,
+    				skin: 'layui-layer-molv',
+    				title: "民主测评导入",
+    				area: ['750px', '400px'],
+    				shadeClose: false,
+    				content: jQuery("#democracyLayer"),
+    				btn: ['确定','取消'],
+    				btn1: function (index) {
+    					$.ajax({
+    						type: "POST",
+    					    url: baseURL + "/api/department/staff/democracy/save",
+    					    data: JSON.stringify(vm.importData),
+    					    dataType: "json",
+    					    contentType : 'application/json',
+    					    success: function(r){
+    							if(r.code == 0){
+    								layer.close(index);
+    								alert(r.msg);
+    								vm.reload();
+    							}else{
+    								alert(r.msg);
+    							}
+    						}
+    					});
+    	            }
+    			});
+            }else{
+                alert(r.msg);
+            }
+        }
+	});
+	
+	new AjaxUpload('#uploadComment', {
+        action: baseURL + '/api/department/staff/comment/upload',
+        name: 'file',
+        autoSubmit:true,
+        responseType:"json",
+        onSubmit:function(file, extension){
+            if (!(extension && /^(xls)$/.test(extension.toLowerCase()))){
+                alert('只支持xls格式的图片！');
+                return false;
+            }
+        },
+        onComplete : function(file, r){
+            if(r.code == 0){
+            	vm.importData = r.data;
+            	layer.open({
+    				type: 1,
+    				skin: 'layui-layer-molv',
+    				title: "政策评价导入",
+    				area: ['750px', '400px'],
+    				shadeClose: false,
+    				content: jQuery("#commentLayer"),
+    				btn: ['确定','取消'],
+    				btn1: function (index) {
+    					$.ajax({
+    						type: "POST",
+    					    url: baseURL + "/api/department/staff/comment/save",
+    					    data: JSON.stringify(vm.importData),
+    					    dataType: "json",
+    					    contentType : 'application/json',
+    					    success: function(r){
+    							if(r.code == 0){
+    								layer.close(index);
+    								alert(r.msg);
+    								vm.reload();
+    							}else{
+    								alert(r.msg);
+    							}
+    						}
+    					});
+    	            }
+    			});
+            }else{
+                alert(r.msg);
+            }
+        }
+    });
+	
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="单位考核汇总" contentLevel="部门考核" pageTitle="单位考核汇总" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-1">
+		<select class="form-control" v-model="q.year" @change="query">
+			<option v-for="option in years" v-bind:value="option">
+				{{ option }}
+			</option>
+		</select>
+	</div>
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="姓名">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" id="uploadDemocracy" v-show="process != null && process.complete != 1"><i class="fa fa-plus"></i>&nbsp;民主测评导入</a>
+	<a class="btn btn-primary" id="uploadComment" v-show="process != null && process.complete != 1"><i class="fa fa-plus"></i>&nbsp;政策评价导入</a>
+	<a class="btn btn-primary" @click="calc" v-show="process != null && process.complete != 1"><i class="fa fa-plus"></i>&nbsp;推算</a>
+	<!-- 
+	<a class="btn btn-primary" @click="submitAll" v-show="process != null && process.complete == 0"><i class="fa fa-plus"></i>&nbsp;提交</a>
+	<a class="btn btn-primary" @click="dexport" v-show="process != null && process.complete == 1"><i class="fa fa-plus"></i>&nbsp;导出</a>
+	 -->
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="downloadLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="col-sm-12" style="text-align:center;padding-top:70px;">
+			<a id="download_url" class="btn btn-primary" href="#" target="blank" >立刻下载</a>
+		</div>
+	</form>
+</div>
+<div id="editLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-2 control-label">领导测评</div>
+			<div class="col-sm-10">
+				<label v-for="layer in layers" class="checkbox-inline">
+				  <input type="radio" name="layerLeader" :value="layer.id" v-model="evaluation.leader">{{layer.name}}
+				</label>
+			</div>
+		</div>
+	</form>
+</div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-2 control-label">统筹</div>
+			<div class="col-sm-10">
+				<label v-for="layer in layers" class="checkbox-inline">
+				  <input type="radio" name="layer" :value="layer.id" v-model="evaluation.adjust">{{layer.name}}
+				</label>
+			</div>
+		</div>
+	</form>
+</div>
+<div id="jobLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-2 control-label">职务</div>
+			<div class="col-sm-10">
+				<label v-for="layer in job" class="checkbox-inline">
+				  <input type="radio" name="layer" :value="layer.id" v-model="evaluation.type">{{layer.name}}
+				</label>
+			</div>
+		</div>
+	</form>
+</div>
+<div id="democracyLayer" style="display: none;">
+	<table id="dataTable" class="ui-jqgrid-btable ui-common-table table table-bordered">
+		<tbody>
+			<tr class="ui-jqgrid-labels">
+				<th class="ui-th-column ui-th-ltr ">员工编号</th>
+				<th class="ui-th-column ui-th-ltr ">员工姓名</th>
+				<th class="ui-th-column ui-th-ltr ">总人数</th>
+				<th class="ui-th-column ui-th-ltr ">优秀人数</th>
+				<th class="ui-th-column ui-th-ltr ">称职人数</th>
+				<th class="ui-th-column ui-th-ltr ">基本称职人数</th>
+				<th class="ui-th-column ui-th-ltr ">不称职人数</th>
+				<th class="ui-th-column ui-th-ltr ">弃权人数</th>
+				<th class="ui-th-column ui-th-ltr ">错误信息</th>
+			</tr>
+			<tr class="jqgrow ui-row-ltr" v-for="item in importData" >
+				<td class="ui-th-column ui-th-ltr ">{{item.staId}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.staName}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.number}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.top}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.good}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.nomal}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.weak}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.abstention}}</td>
+				<td class="ui-th-column ui-th-ltr ">{{item.message}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+<div id="commentLayer" style="display: none;">
+	<table id="dataTable" class="ui-jqgrid-btable ui-common-table table table-bordered">
+		<tbody>
+			<tr class="ui-jqgrid-labels">
+				<th class="ui-th-column ui-th-ltr ">员工编号</th>
+				<th class="ui-th-column ui-th-ltr ">姓名</th>
+				<th class="ui-th-column ui-th-ltr ">最大层级</th>
+				<th class="ui-th-column ui-th-ltr ">评论内容</th>
+				<th class="ui-th-column ui-th-ltr ">评论层级</th>
+				<th class="ui-th-column ui-th-ltr ">错误信息</th>
+			</tr>
+			<tr class="jqgrow ui-row-ltr" v-for="item in importData" >
+				<td class="ui-th-column ui-th-ltr " >{{item.staId}}</td>
+				<td class="ui-th-column ui-th-ltr " >{{item.staName}}</td>
+				<td class="ui-th-column ui-th-ltr " >{{item.maxLevel}}</td>
+				<td class="ui-th-column ui-th-ltr " colspan="3" style="padding: 0px;">
+					<table class="ui-jqgrid-btable ui-common-table table table-bordered" style="margin-bottom:0px;">
+						<tr v-for="comment in item.items">
+							<td class="ui-th-column ui-th-ltr " style="width:50%;">{{comment.comment}}</td>
+							<td class="ui-th-column ui-th-ltr " style="width:50%;">{{comment.max}}</td>
+						</tr>
+					</table>
+				</td>
+				<td class="ui-th-column ui-th-ltr " >{{item.message}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</@layout.doContent>

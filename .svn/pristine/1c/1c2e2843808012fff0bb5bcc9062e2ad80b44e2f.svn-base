@@ -1,0 +1,68 @@
+package com.ewaytek.manage.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.ewaytek.repository.DepartmentProcessRepository;
+
+/**
+ * 单位考核部分
+ * @author zhangjingpu
+ *
+ */
+@Configuration
+@RequestMapping("/manage")
+public class ManageDepartmentViewController {
+
+	@Autowired
+	private DepartmentProcessRepository departmentProcessRepository;
+	
+	@RequestMapping("/")
+	public String index(){
+		return "redirect:/manage/dashboard";
+	}
+	
+	@RequestMapping("/department")
+	public String department(){
+		return "manage/department/department";
+	}
+	
+	@RequestMapping("/department/process")
+	public String process(){
+		return "manage/department/process";
+	}
+	
+	@RequestMapping("/department/tree")
+	public String tree(){
+		return "manage/department/tree";
+	}
+	
+	@RequestMapping("/department/democracy")
+	public String democracy(Model model){
+		List<Integer> years =  departmentProcessRepository.findDistinctYearOrderDesc();
+		model.addAttribute("years", String.valueOf(years));
+		return "manage/department/democracy";
+	}
+	
+	@RequestMapping("/department/comment")
+	public String comment(Model model){
+		List<Integer> years =  departmentProcessRepository.findDistinctYearOrderDesc();
+		model.addAttribute("years", String.valueOf(years));
+		return "manage/department/comment";
+	}
+	
+	@RequestMapping("/department/evaluation")
+	public String evaluation(Model model){
+		List<Integer> years =  departmentProcessRepository.findDistinctYearOrderDesc();
+		model.addAttribute("years", String.valueOf(years));
+		return "manage/department/evaluation";
+	}
+	
+	
+	
+	
+}

@@ -1,0 +1,328 @@
+package com.ewaytek.manage.api.controller.staff;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jackson.JsonObjectSerializer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.Staff;
+import com.ewaytek.model.StaffComment;
+import com.ewaytek.model.StaffDemocracy;
+import com.ewaytek.model.StaffEvaluation;
+import com.ewaytek.model.StaffProcess;
+import com.ewaytek.model.User;
+import com.ewaytek.model.pojo.StaffCommentEx;
+import com.ewaytek.model.pojo.StaffCommentExItem;
+import com.ewaytek.model.pojo.StaffDemocracyEx;
+import com.ewaytek.repository.StaffCommentRepository;
+import com.ewaytek.repository.StaffDemocracyRepository;
+import com.ewaytek.repository.StaffEvaluationRepository;
+import com.ewaytek.repository.StaffProcessRepository;
+import com.ewaytek.repository.StaffRepository;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Controller
+@RequestMapping("/api/department/staff/comment")
+public class StaffCommentController {
+	
+	/**
+	 * 上传目录
+	 */
+	public static final String ROOT = "upload/comment";  
+	
+	@Autowired
+	private StaffCommentRepository staffCommentRepository;
+	
+	@Autowired
+	private StaffEvaluationRepository staffEvaluationRepository;
+	
+	@Autowired
+	private StaffProcessRepository staffProcessRepository;
+	
+	@RequestMapping("/list/")
+	@ResponseBody
+	public Map<String,Object> staff(
+			@RequestParam(value = "year", defaultValue = "0") Integer year, 
+			@RequestParam(value = "name", defaultValue = "") final String name, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer  limit){
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			StaffProcess staffProcess = null;
+			if(year == 0){
+				staffProcess = staffProcessRepository.fetchCurrent();
+				year = staffProcess.getYear();
+			} else {
+				staffProcess = staffProcessRepository.findProcessByYear(year);
+			}
+			
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Page<StaffCommentEx> list = staffCommentRepository.findStaffComment(year, depId, name, pageable);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result).put("process", staffProcess);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	public int getLayerValue(String comment){
+		if(comment.trim().equals("优秀")){
+			return 4;
+		} else if(comment.trim().equals("称职")){
+			return 3;
+		} else if(comment.trim().equals("基本称职")){
+			return 2;
+		} else if(comment.trim().equals("不称职")){
+			return 1;
+		} 
+		return 0;
+	}
+	
+	@RequestMapping("/upload")
+	@ResponseBody
+	public Map<String,Object> upload(@RequestParam("file") MultipartFile file){
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			if(file.isEmpty()){
+				return Result.error("上传文件不能为空!");
+			}
+			
+			File dir = new File(ROOT);
+			if(!dir.exists()){
+				dir.mkdirs();
+			}
+			
+			String filename = String.valueOf(System.currentTimeMillis()) + ".xls";
+			Files.copy(file.getInputStream(), Paths.get(ROOT, filename));  
+			String url = "/" + ROOT + "/" + filename;
+			
+			// 获取最新的一条数据
+			StaffProcess staffProcess = staffProcessRepository.fetchCurrent();
+			
+			if(staffProcess.getComplete() == 1){
+				return Result.error("已经完成考评，不能进行导入!");
+			}
+			
+			// 解析文件
+			InputStream inputStream = new FileInputStream(ROOT + "/" + filename);
+			HSSFWorkbook hssfWorkbook = new HSSFWorkbook(inputStream);
+			
+			// 获取需要评价的所有的单位
+			List<StaffCommentEx> listAll = staffCommentRepository.findStaffComment(staffProcess.getYear(), depId, "");
+			Map<String, StaffCommentEx> mapAll = new HashMap<String, StaffCommentEx>();
+			for(int i = 0; i < listAll.size(); i++){
+				
+				String name = listAll.get(i).getStaName().trim();
+				
+				mapAll.put(name, listAll.get(i));
+			}
+			
+			List<StaffCommentEx> staffComments = new ArrayList<StaffCommentEx>();
+			HSSFSheet sheet = hssfWorkbook.getSheetAt(0);
+			if(sheet == null){
+				return Result.ok().put("data", staffComments);
+			}
+			
+			StaffCommentEx staffCommentEx = null;
+			
+			for(int i = 1; i <= sheet.getLastRowNum(); i++){
+				HSSFRow row = sheet.getRow(i);
+				String depName = row.getCell(0).getStringCellValue().trim();
+				
+				if(!depName.equals("")){
+					staffCommentEx = new StaffCommentEx();
+					staffCommentEx.setStaName(depName);
+					staffCommentEx.setItems(new ArrayList<StaffCommentExItem>());
+					
+					int maxYear = getLayerValue( row.getCell(2).getStringCellValue());
+					if(maxYear == 0){
+						staffCommentEx.setMessage("导入内容错误!");
+					}
+					staffCommentEx.setMaxLevel(maxYear);
+					
+					if(mapAll.containsKey(depName)){
+						staffCommentEx.setStaId(mapAll.get(depName).getStaId());
+					} else {
+						staffCommentEx.setMessage("员工不存在");
+					}
+					
+					staffComments.add(staffCommentEx);
+					
+				} 
+				
+				int maxYear = getLayerValue( row.getCell(2).getStringCellValue());
+				if(maxYear == 0){
+					staffCommentEx.setMessage("导入内容错误!");
+				} else{
+					if(maxYear < staffCommentEx.getMaxLevel()){
+						staffCommentEx.setMaxLevel(maxYear);
+					}
+				}
+				
+				String commentName = row.getCell(1).getStringCellValue().trim();
+				
+				StaffCommentExItem item = new StaffCommentExItem();
+				item.setComment(commentName);
+				item.setValue("");
+				item.setMax(String.valueOf(maxYear));
+				staffCommentEx.getItems().add(item);
+			}
+			
+			
+			return Result.ok().put("data", staffComments);
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/save/info")
+	@ResponseBody
+	public Map<String,Object> saveInfo(
+			@RequestBody StaffCommentEx staffCommentEx){
+		try{
+			StaffComment staffComment = staffCommentRepository.findOne(staffCommentEx.getId());
+			
+			if(staffComment == null){
+				return Result.error("保存失败");
+			}
+			
+			int maxLayer = 4;
+			for(int i = 0; i < staffCommentEx.getItems().size(); i++){
+				int max = Integer.parseInt(staffCommentEx.getItems().get(i).getMax());
+				if(maxLayer > max){
+					maxLayer = max;
+				}
+			}
+			
+			staffComment.setMaxLevel(maxLayer);
+			
+			ObjectMapper mapper = new ObjectMapper();
+			String content = mapper.writeValueAsString(staffCommentEx.getItems());
+			staffComment.setContent(content);
+			
+			staffCommentRepository.save(staffComment);
+			
+			staffEvaluationRepository.updateCommentByDepIDAndYear(
+					staffComment.getMaxLevel(), 
+					staffComment.getStaId(), 
+					staffComment.getYear()
+			);
+			return Result.ok("保存成功");
+		} catch (Exception e){
+			return Result.error("保存失败");
+		}
+	}
+	
+	@RequestMapping("/save")
+	@ResponseBody
+	public Map<String,Object> save(@RequestBody List<StaffCommentEx> list){
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			// 获取最新的一条数据
+			StaffProcess staffProcess = staffProcessRepository.fetchCurrent();
+			
+			if(staffProcess.getDemocracy() == 1){
+				return Result.error("已经完成员工评论，不需要在进行员工评论导入!");
+			}
+			
+			List<StaffComment> listAll = staffCommentRepository.findStaffComment(staffProcess.getYear(), depId);
+			Map<Integer, StaffComment> mapAll = new HashMap<Integer, StaffComment>();
+			for(int i = 0; i < listAll.size(); i++){
+				mapAll.put(listAll.get(i).getStaId(), listAll.get(i));
+			}
+			
+			ObjectMapper mapper = new ObjectMapper();
+			
+			for(int i = 0; i < list.size(); i++){
+				
+				StaffCommentEx staffCommentEx = list.get(i);
+				
+				if(staffCommentEx.getMessage() != null && !staffCommentEx.getMessage().equals("") ){
+					continue;
+				}
+				
+				StaffComment staffComment = null;
+				
+				if(mapAll.containsKey(staffCommentEx.getStaId())){
+					staffComment = mapAll.get(staffCommentEx.getStaId());
+					
+					staffComment.setMaxLevel(staffCommentEx.getMaxLevel());
+					String content = mapper.writeValueAsString(staffCommentEx.getItems());
+					
+					staffComment.setContent(content);
+					
+					// 计算公式，计算最终结果
+					staffCommentRepository.save(staffComment);
+					
+					// 存储到评价表中
+					staffEvaluationRepository.updateCommentByDepIDAndYear(
+						staffComment.getMaxLevel(), 
+						staffComment.getStaId(), 
+						staffComment.getYear()
+					);
+				}
+			}
+			
+			return Result.ok("保存成功");
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+}

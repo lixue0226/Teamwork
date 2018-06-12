@@ -1,0 +1,45 @@
+package com.ewaytek.manage.controller;
+
+import java.nio.file.Paths;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.shiro.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+@Controller
+@RequestMapping("/attachment")
+public class AttachmentController {
+
+	/**
+	 * 上传目录
+	 */
+	public static final String ROOT = "attachment";  
+	
+	private final ResourceLoader resourceLoader;  
+	  
+    @Autowired  
+    public AttachmentController(ResourceLoader resourceLoader) {  
+        this.resourceLoader = resourceLoader;  
+    } 
+	
+	@RequestMapping("/{filename:.+}")
+	@ResponseBody
+	public ResponseEntity<?> file(@PathVariable String filename, HttpServletResponse response){
+		try {
+			if(filename.endsWith(".xls")){
+				response.setContentType( "application/ms-excel" );
+		        response.setHeader( "Content-disposition", "attachment; filename=" + filename ); 
+			}
+            return ResponseEntity.ok(resourceLoader.getResource("file:" + Paths.get(ROOT, filename).toString()));  
+        } catch (Exception e) {  
+            return ResponseEntity.notFound().build();  
+        }
+	}
+}

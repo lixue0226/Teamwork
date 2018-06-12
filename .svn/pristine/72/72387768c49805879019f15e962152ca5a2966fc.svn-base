@@ -1,0 +1,39 @@
+package com.ewaytek.repository;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.DepartmentDemocracy;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.pojo.DepartmentDemocracyEx;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+
+public interface DepartmentDemocracyRepository extends JpaRepository<DepartmentDemocracy, Integer>, JpaSpecificationExecutor<DepartmentDemocracy> {
+
+	@Modifying(clearAutomatically=true)
+	@Query("delete from DepartmentDemocracy t where t.year = :year")
+	@Transactional
+	void deleteTreeByYear(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentDemocracyEx(dd.id, dd.depId, dd.depLevel, d.name, dd.number, dd.top, dd.good, dd.normal, dd.weak, dd.abstention, dd.dFinal) from DepartmentDemocracy dd, Department d where dd.depId = d.id and dd.id = :id ")
+	DepartmentDemocracyEx findOneDepartmentDemocracy(@Param("id") Integer id);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentDemocracyEx(dd.id, dd.depId, dd.depLevel, d.name, dd.number, dd.top, dd.good, dd.normal, dd.weak, dd.abstention, dd.dFinal) from DepartmentDemocracy dd, Department d where dd.depId = d.id and dd.year = :year and d.name like %:name% order by dd.id desc")
+	List<DepartmentDemocracyEx> findDepartmentDemocracy(@Param("year") Integer year, @Param("name") String name);
+	
+	@Query("from DepartmentDemocracy dd where dd.year = :year")
+	List<DepartmentDemocracy> findDepartmentDemocracy(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentDemocracyEx(dd.id, dd.depId, dd.depLevel, d.name, dd.number, dd.top, dd.good, dd.normal, dd.weak, dd.abstention, dd.dFinal) from DepartmentDemocracy dd, Department d where dd.depId = d.id and dd.year = :year and d.name like %:name%")
+	Page<DepartmentDemocracyEx> findDepartmentDemocracy(@Param("year") Integer year, @Param("name") String name, Pageable page);
+}

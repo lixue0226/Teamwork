@@ -1,0 +1,89 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.Date;
+
+
+/**
+ * The persistent class for the department_process database table.
+ * 
+ */
+@Entity
+@Table(name="department_process")
+@NamedQuery(name="DepartmentProcess.findAll", query="SELECT d FROM DepartmentProcess d")
+public class DepartmentProcess implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="DCom_ID")
+	private int id;
+
+	@Column(name="Dcom_achievement")
+	private int achievement;
+
+	@Column(name="DCom_democracy")
+	private int democracy;
+
+	@Column(name="DCom_leader")
+	private int leader;
+
+	@Column(name="DCom_year")
+	private Integer year;
+	
+	@Column(name="Dcom_complete")
+	private Integer complete;
+
+	public Integer getComplete() {
+		return complete;
+	}
+
+	public void setComplete(Integer complete) {
+		this.complete = complete;
+	}
+
+	public DepartmentProcess() {
+	}
+
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getAchievement() {
+		return this.achievement;
+	}
+
+	public void setAchievement(int achievement) {
+		this.achievement = achievement;
+	}
+
+	public int getDemocracy() {
+		return this.democracy;
+	}
+
+	public void setDemocracy(int democracy) {
+		this.democracy = democracy;
+	}
+
+	public int getLeader() {
+		return this.leader;
+	}
+
+	public void setLeader(int leader) {
+		this.leader = leader;
+	}
+
+	public Integer getYear() {
+		return this.year;
+	}
+
+	public void setYear(Integer year) {
+		this.year = year;
+	}
+
+}

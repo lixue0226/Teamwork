@@ -1,0 +1,171 @@
+<#import "layout/layout_staff.html" as layout />
+
+<#macro header>
+	<style type="text/css">
+		.info-box {
+			box-shadow:1px 1px 1px 1px rgba(0, 0, 0, 0.1);
+		}
+	</style>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript" src="${rc.contextPath}/libs/echarts.common.min.js"></script>
+<script type="text/javascript">
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 0; i < 10; i++){
+	yearlist.push({
+		value: date - i,
+		text : date - i
+	})
+}
+
+data = $.extend(
+	data,{
+		q : {
+			year : ''
+		},
+		years : yearlist,
+		total : [],
+		process : {
+			
+		}
+	}
+);
+methods = $.extend(
+	methods,{
+		query : function(){
+			vm.reload();
+		},
+		add : function(){
+			confirm('确定要重新开始新的考核吗?', function(){
+				$.get(baseURL + "/api/department/process/create/"+vm.q.year, function(result){
+					vm.process = result.data;
+					alert(result.msg);
+				});
+			});
+		},
+		chart : function(){
+			var $chart = $("#chart");
+			var chart = echarts.init(document.getElementById('chart'));
+			if(vm.process != null && vm.process.complete == 1){
+				$chart.show();
+				var option = {
+					    color: ['#3398DB'],
+					    tooltip : {
+					        trigger: 'axis',
+					        axisPointer : {            // 坐标轴指示器，坐标轴触发有效
+					            type : 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+					        }
+					    },
+					    title: {
+					        text: '年度考核汇总'
+					    },
+					    grid: {
+					        left: '3%',
+					        right: '4%',
+					        bottom: '3%',
+					        containLabel: true
+					    },
+					    xAxis : [
+					        {
+					            type : 'category',
+					            data : ['优秀', '称职', '基本称职', '不称职'],
+					            axisTick: {
+					                alignWithLabel: true
+					            }
+					        }
+					    ],
+					    yAxis : [
+					        {
+					            type : 'value'
+					        }
+					    ],
+					    series : [
+					        {
+					            name:'数量',
+					            type:'bar',
+					            barWidth: '60%',
+					            data:vm.total
+					        }
+					    ]
+					};
+				chart.setOption(option);
+			} else {
+				$chart.hide();
+			}
+		},
+		reload : function(){
+			$.get(baseURL + "/api/department/staff/process/info/"+vm.q.year, function(result){
+				vm.process = result.data;
+				if(vm.process != null){
+					vm.q.year = vm.process.year;
+				}
+				vm.total = result.total;
+				vm.chart();
+			});
+		}
+	}
+);
+
+$(function(){
+	vm.reload();
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="进度" contentLevel="仪表盘" pageTitle="进度管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<select class="form-control" v-model="q.year" @change="query">
+			<option v-for="option in years" v-bind:value="option.value">
+				{{ option.text }}
+			</option>
+		</select>
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<!-- 
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;开始新的考核</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;推算</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;完成单位考核</a>
+	 -->
+</div>
+<div class="row" v-if="process != null">	
+	<div class="col-md-4 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">•</span>
+            <div class="info-box-content">
+              	<span class="info-box-text" style="padding-top:10px;">民主测评</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/staff/democracy">民主测评</a></span>
+            </div>
+        </div>
+	</div>
+	
+	<div class="col-md-4 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">•</span>
+            <div class="info-box-content">
+              	<span class="info-box-text" style="padding-top:10px;">政策评价</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/staff/comment">政策评价</a></span>
+            </div>
+        </div>
+	</div>
+	
+	<div class="col-md-4 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">•</span>
+            <div class="info-box-content">
+              	<span class="info-box-text" style="padding-top:10px;">考核汇总</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/staff/evaluation">考核汇总</a></span>
+            </div>
+        </div>
+	</div>
+</div>
+<div class="row">
+	<div id="chart" style="width:100%; height:300px;">
+	</div>
+</div>
+</@layout.doContent>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>${site.title}</title>
+
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="renderer" content="webkit">
+<meta name="keywords" content="首页 - ${site.title} " />
+<meta name="description" content="" />
+
+<link rel="stylesheet" href="${rc.contextPath}/res//css/main.css">
+<style type="text/css">
+	.fun-con
+	{
+		width: 900px;
+	}
+	#Content {
+	    background: #fff none repeat scroll 0 0;
+	    margin: 0 auto 30px;
+	    overflow: hidden;
+	    width: 950px;
+	}
+	#Content3{
+		margin: 10px auto 0;
+	}
+	#Content1 {
+        float: left;
+        padding: 25px 40px;
+    	width: 840px;
+        height: auto !important;
+        min-height: 455px;
+        border: solid 1px #ddd;
+    }
+	.Condiv h1 {
+	    font-size: 28px;
+	    line-height: 200%;
+	    text-align: center;
+	}
+	.Condiv .sou {
+	    border-bottom: 1px solid #ddd;
+	    height: 25px;
+	    margin-top: 25px;
+	    padding: 0 10px;
+	}
+</style>
+</head>
+<body>
+	<div id="Body">
+		
+		<#include "/front/frames/top.html">
+		
+		<div id="Content">
+		
+			<div class="paths"><a href="${rc.contextPath}/"><img src="${rc.contextPath}/res/images/homeico.png">首页</a><span><span id="PathID4"> &gt; <a href="#">通知公告</a></span></span></div>
+			
+			<div id="Content1">
+				<div class="Condiv">
+					<ul>
+						<li>
+							<h1>
+								<span id="ReportIDname">${notice.title}</span>
+							</h1>
+							<div class="sou">
+								<div class="lefts">
+									发布时间：<span id="ReportIDIssueTime">${notice.createAt?date}</span>
+								</div>
+								<span id="ReportIDClassName" data="0"></span>
+							</div>
+							<div class="preNet">
+								<#outputformat "plainText">
+								${notice.content}
+								</#outputformat>
+								
+								<#if notice.attachment != null>
+									<br/><br/><br/>
+									<a href="${rc.contextPath}${notice.attachment}">附件下载</a>
+								</#if>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		
+		<#include "/front/frames/footer.html">
+		
+	</div>
+	
+</body>
+<#include "/front/frames/script.html">
+</html>

@@ -1,0 +1,46 @@
+package com.ewaytek.manage.controller;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+/**
+ * 内容管理部分
+ * @author zhangjingpu
+ */
+@Configuration
+@RequestMapping("/manage")
+public class ManageCMSViewController {
+
+	/**
+	 * 广告管理部分
+	 * @return
+	 */
+	@RequestMapping("/cms/advertisement")
+	public String advertisement(){
+		return "manage/cms/advertisement";
+	}
+	
+	/**
+	 * 通知、公告、下载
+	 * @param type
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping("/cms/notice/{type}")
+	public String notice(@PathVariable("type") Integer type, Model model){
+		model.addAttribute("type", type);
+		if(type == 1){
+			model.addAttribute("name", "通知");
+		} else if(type == 2){
+			model.addAttribute("name", "公告");
+		} else if(type == 3){
+			model.addAttribute("name", "下载");
+		} else {
+			model.addAttribute("name", "");
+		}
+		return "manage/cms/notice";
+	}
+	
+}

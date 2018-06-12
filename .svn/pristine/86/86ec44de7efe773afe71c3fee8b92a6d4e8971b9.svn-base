@@ -1,0 +1,46 @@
+package com.ewaytek.repository;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.DepartmentDemocracy;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.StaffDemocracy;
+import com.ewaytek.model.pojo.DepartmentDemocracyEx;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+import com.ewaytek.model.pojo.StaffDemocracyEx;
+
+public interface StaffDemocracyRepository extends JpaRepository<StaffDemocracy, Integer>, JpaSpecificationExecutor<StaffDemocracy> {
+
+	@Modifying(clearAutomatically=true)
+	@Query("delete from StaffDemocracy t where t.year = :year")
+	@Transactional
+	void deleteStaffDemocracyByYear(@Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query(nativeQuery=true, value="INSERT into staff_democracy(`Sta_ID`, `Dep_ID`,`SDem_year`) SELECT s.Sta_ID, sr.Dep_ID, :year FROM staff s LEFT OUTER JOIN (SELECT a.* FROM staff_resume a WHERE a.Sta_date = (SELECT max(Sta_date) FROM staff_resume b WHERE b.Sta_ID = a.Sta_ID)) sr ON s.Sta_ID = sr.Sta_ID where sr.Dep_ID in (select Dep_ID from department_evaluation where DEva_year = :year)")
+	@Transactional
+	int createStaffDemocracyByYear(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.StaffDemocracyEx(dd.id,dd.depId,dd.abstention,dd.dfinal,dd.good,dd.nomal,dd.number,dd.state,dd.top,dd.weak,dd.year,dd.staId,d.name) from StaffDemocracy dd, Staff d where dd.staId = d.id and dd.id = :id ")
+	StaffDemocracyEx findOneStaffDemocracy(@Param("id") Integer id);
+	
+	@Query("select new com.ewaytek.model.pojo.StaffDemocracyEx(dd.id,dd.depId,dd.abstention,dd.dfinal,dd.good,dd.nomal,dd.number,dd.state,dd.top,dd.weak,dd.year,dd.staId,d.name) from StaffDemocracy dd, Staff d where dd.staId = d.id and dd.depId = :depId and dd.year = :year and d.name like %:name% order by dd.id desc")
+	List<StaffDemocracyEx> findStaffDemocracy(@Param("year") Integer year, @Param("depId") Integer depId, @Param("name") String name);
+	
+	@Query("from StaffDemocracy dd where dd.year = :year and dd.depId = :depId")
+	List<StaffDemocracy> findStaffDemocracy(@Param("year") Integer year, @Param("depId") Integer depId);
+	
+	@Query("select new com.ewaytek.model.pojo.StaffDemocracyEx(dd.id,dd.depId,dd.abstention,dd.dfinal,dd.good,dd.nomal,dd.number,dd.state,dd.top,dd.weak,dd.year,dd.staId,d.name) from StaffDemocracy dd, Staff d where dd.staId = d.id and dd.depId = :depId and dd.year = :year and d.name like %:name%")
+	Page<StaffDemocracyEx> findStaffDemocracy(@Param("year") Integer year,  @Param("depId") Integer depId, @Param("name") String name, Pageable page);
+}

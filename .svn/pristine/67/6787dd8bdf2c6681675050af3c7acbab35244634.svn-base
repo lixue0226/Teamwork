@@ -1,0 +1,71 @@
+package com.ewaytek.repository;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.DepartmentComment;
+import com.ewaytek.model.DepartmentDemocracy;
+import com.ewaytek.model.DepartmentEvaluation;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.pojo.DepartmentDemocracyEx;
+import com.ewaytek.model.pojo.DepartmentEvaluationEx;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+
+public interface DepartmentEvaluationRepository extends JpaRepository<DepartmentEvaluation, Integer>, JpaSpecificationExecutor<DepartmentEvaluation> {
+
+	@Modifying(clearAutomatically=true)
+	@Query("delete from DepartmentEvaluation t where t.year = :year")
+	@Transactional
+	void deleteTreeByYear(@Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query("update DepartmentEvaluation set democracy = :democracy where depId = :depId and year = :year")
+	@Transactional
+	void updateDemocracyByDepIDAndYear(@Param("democracy") Integer democracy, @Param("depId") Integer depId, @Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query("update DepartmentEvaluation set leader = :leader where depId = :depId and year = :year")
+	@Transactional
+	void updateLeaderByDepIDAndYear(@Param("leader") Integer leader, @Param("depId") Integer depId, @Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query("update DepartmentEvaluation set achievement = :achievement where depId = :depId and year = :year")
+	@Transactional
+	void updateAchievementByDepIDAndYear(@Param("achievement") Integer achievement, @Param("depId") Integer depId, @Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query("update DepartmentEvaluation set comment = :comment where depId = :depId and year = :year")
+	@Transactional
+	void updateCommentByDepIDAndYear(@Param("comment") Integer comment, @Param("depId") Integer depId, @Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentEvaluationEx(dd.id, dd.depId, dd.depLevel, d.name, dd.democracy, dd.leader, dd.achievement, dd.comment, dd.dCalc, dd.dFix, dd.dfinal, dd.mark, dd.year) from DepartmentEvaluation dd, Department d where dd.depId = d.id and dd.year = :year and d.name like %:name% order by dd.id desc")
+	List<DepartmentEvaluationEx> findDepartmentEvaluation(@Param("year") Integer year, @Param("name") String name);
+	
+	@Query("from DepartmentEvaluation dd where dd.year = :year")
+	List<DepartmentEvaluation> findDepartmentEvaluation(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentEvaluationEx(dd.id, dd.depId,dd.depLevel, d.name, dd.democracy, dd.leader, dd.achievement, dd.comment, dd.dCalc, dd.dFix, dd.dfinal, dd.mark, dd.year) from DepartmentEvaluation dd, Department d where dd.depId = d.id and dd.year = :year ")
+	List<DepartmentEvaluationEx> findDepartmentEvaluationEx(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentEvaluationEx(dd.id, dd.depId,dd.depLevel, d.name, dd.democracy, dd.leader, dd.achievement, dd.comment, dd.dCalc, dd.dFix, dd.dfinal, dd.mark, dd.year) from DepartmentEvaluation dd, Department d where dd.depId = d.id and dd.year = :year and d.name like %:name%")
+	Page<DepartmentEvaluationEx> findDepartmentEvaluation(@Param("year") Integer year, @Param("name") String name, Pageable page);
+	
+	@Query("from DepartmentEvaluation dd where dd.year = :year and (dd.achievement = 0 or dd.comment = 0 or dd.democracy = 0 or dd.leader = 0)")
+	List<DepartmentEvaluation> findCalcDepartmentEvaluation(@Param("year") Integer year);
+	
+	@Query("from DepartmentEvaluation dd where dd.depId = :depId order by dd.year asc")
+	List<DepartmentEvaluation> findByDepId(@Param("depId") Integer depId);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentEvaluationEx(dd.id, dd.depId,dd.depLevel, d.name, dd.democracy, dd.leader, dd.achievement, dd.comment, dd.dCalc, dd.dFix, dd.dfinal, dd.mark, dd.year) from DepartmentEvaluation dd, Department d where dd.depId = d.id and dd.depId = :depId")
+	Page<DepartmentEvaluationEx> findDepartmentEvaluationByDepId(@Param("depId") Integer depId, Pageable page);
+}

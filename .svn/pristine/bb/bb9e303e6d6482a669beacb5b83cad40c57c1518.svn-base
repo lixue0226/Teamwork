@@ -1,0 +1,358 @@
+package com.ewaytek.manage.api.controller.staff;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.crypto.hash.Md5Hash;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.common.validator.Assert;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.Staff;
+import com.ewaytek.model.StaffDemocracy;
+import com.ewaytek.model.StaffProcess;
+import com.ewaytek.model.User;
+import com.ewaytek.model.pojo.StaffDemocracyEx;
+import com.ewaytek.model.pojo.StaffEvaluationEx;
+import com.ewaytek.repository.StaffDemocracyRepository;
+import com.ewaytek.repository.StaffEvaluationRepository;
+import com.ewaytek.repository.StaffProcessRepository;
+import com.ewaytek.repository.StaffRepository;
+import com.ewaytek.repository.UserRepository;
+import com.google.code.kaptcha.Constants;
+
+@Controller
+@RequestMapping("/api/department/staff/democracy")
+public class StaffDemocracyController {
+	
+	/**
+	 * 上传目录
+	 */
+	public static final String ROOT = "upload/democracy";  
+	
+	@Autowired
+	private StaffProcessRepository staffProcessRepository;
+	
+	@Autowired
+	private StaffDemocracyRepository staffDemocracyRepository;
+
+	@Autowired
+	private StaffEvaluationRepository staffEvaluationRepository;
+	
+	@RequestMapping(value="/list")
+	@ResponseBody
+	public Map<String,Object> list(
+			@RequestParam(value = "year", defaultValue = "0") Integer year, 
+			@RequestParam(value = "name", defaultValue = "") final String name, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			StaffProcess staffProcess = null;
+			if(year == 0){
+				staffProcess = staffProcessRepository.fetchCurrent();
+				year = staffProcess.getYear();
+			} else {
+				staffProcess = staffProcessRepository.findProcessByYear(year);
+			}
+			
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Page<StaffDemocracyEx> list = staffDemocracyRepository.findStaffDemocracy(year, depId, name, pageable);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result).put("process", staffProcess);
+			
+		} catch (Exception e){
+			e.printStackTrace();
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/upload")
+	@ResponseBody
+	public Map<String,Object> upload(@RequestParam("file") MultipartFile file){
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			if(file.isEmpty()){
+				return Result.error("上传文件不能为空!");
+			}
+			
+			File dir = new File(ROOT);
+			if(!dir.exists()){
+				dir.mkdirs();
+			}
+			
+			String filename = String.valueOf(System.currentTimeMillis()) + ".xls";
+			Files.copy(file.getInputStream(), Paths.get(ROOT, filename));  
+			String url = "/" + ROOT + "/" + filename;
+			
+			// 获取最新的一条数据
+			StaffProcess staffProcess = staffProcessRepository.fetchCurrent();
+			
+			if(staffProcess.getDemocracy() == 1){
+				return Result.error("已经完成民主测评，不需要在进行民主测评导入!");
+			}
+			
+			if(staffProcess.getComplete() == 1){
+				return Result.error("已经完成考评，不能进行导入!");
+			}
+			
+			// 解析文件
+			InputStream inputStream = new FileInputStream(ROOT + "/" + filename);
+			HSSFWorkbook hssfWorkbook = new HSSFWorkbook(inputStream);
+			
+			// 获取需要评价的所有的单位
+			List<StaffDemocracyEx> listAll = staffDemocracyRepository.findStaffDemocracy(staffProcess.getYear(), depId, "");
+			Map<String, StaffDemocracyEx> mapAll = new HashMap<String, StaffDemocracyEx>();
+			for(int i = 0; i < listAll.size(); i++){
+				
+				String name = listAll.get(i).getStaName().trim();
+				
+				mapAll.put(name, listAll.get(i));
+			}
+			
+			List<StaffDemocracyEx> staffDemocracys = new ArrayList<StaffDemocracyEx>();
+			HSSFSheet sheet = hssfWorkbook.getSheetAt(0);
+			if(sheet == null){
+				return Result.ok().put("data", staffDemocracys);
+			}
+			
+			for(int i = 1; i <= sheet.getLastRowNum(); i++){
+				HSSFRow row = sheet.getRow(i);
+				StaffDemocracyEx staffDemocracy = new StaffDemocracyEx();
+				
+				String depName = row.getCell(0).getStringCellValue().trim();
+				staffDemocracy.setStaName(depName);
+				
+				int number = (int)row.getCell(1).getNumericCellValue();
+				staffDemocracy.setNumber(number);
+				
+				int top = (int)row.getCell(2).getNumericCellValue();
+				staffDemocracy.setTop(top);
+				
+				int good = (int)row.getCell(3).getNumericCellValue();
+				staffDemocracy.setGood(good);
+				
+				int normal = (int)row.getCell(4).getNumericCellValue();
+				staffDemocracy.setNomal(normal);
+				
+				int weak = (int)row.getCell(5).getNumericCellValue();
+				staffDemocracy.setWeak(weak);
+				
+				int abstention = (int)row.getCell(6).getNumericCellValue();
+				staffDemocracy.setAbstention(abstention);
+				
+				if(mapAll.containsKey(depName)){
+					staffDemocracy.setStaId(mapAll.get(depName).getStaId());
+				} else {
+					staffDemocracy.setMessage("部门名称不存在");
+				}
+				
+				if(number != top + good + normal + weak + abstention){
+					staffDemocracy.setMessage("数据不正确，所有的和不会总数!");
+				}
+				
+				staffDemocracys.add(staffDemocracy);
+			}
+			
+			
+			return Result.ok().put("data", staffDemocracys);
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	/**
+	 * 计算最终结果
+	 * @param departmentDemocracy
+	 * @return
+	 */
+	private int getDFinal(StaffDemocracy staffDemocracy){
+		if(staffDemocracy.getNumber() == 0){
+			return 0;
+		}
+		if(staffDemocracy.getTop() * 100.0 / staffDemocracy.getNumber() > 90){
+			return 4;
+		} else if((staffDemocracy.getTop() + staffDemocracy.getGood() + staffDemocracy.getNomal()) * 100.0 / staffDemocracy.getNumber() > 66) {
+			return 3;
+		} else if(staffDemocracy.getWeak() * 100.0 / staffDemocracy.getNumber() < 34) {
+			return 2;
+		} else {
+			return 1;
+		}
+	}
+	
+	@RequestMapping("/save")
+	@ResponseBody
+	public Map<String,Object> save(@RequestBody List<StaffDemocracyEx> list){
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			// 获取最新的一条数据
+			StaffProcess staffProcess = staffProcessRepository.fetchCurrent();
+			
+			if(staffProcess.getDemocracy() == 1){
+				return Result.error("已经完成民主测评，不需要在进行民主测评导入!");
+			}
+			
+			if(staffProcess.getComplete() == 1){
+				return Result.error("已经完成考评，不能进行导入!");
+			}
+			
+			List<StaffDemocracy> listAll = staffDemocracyRepository.findStaffDemocracy(staffProcess.getYear(), depId);
+			Map<Integer, StaffDemocracy> mapAll = new HashMap<Integer, StaffDemocracy>();
+			for(int i = 0; i < listAll.size(); i++){
+				mapAll.put(listAll.get(i).getStaId(), listAll.get(i));
+			}
+			
+			for(int i = 0; i < list.size(); i++){
+				
+				StaffDemocracyEx staffDemocracyEx = list.get(i);
+				
+				if(staffDemocracyEx.getMessage() != null && !staffDemocracyEx.getMessage().equals("") ){
+					continue;
+				}
+				
+				StaffDemocracy staffDemocracy = null;
+				
+				if(mapAll.containsKey(staffDemocracyEx.getStaId())){
+					staffDemocracy = mapAll.get(staffDemocracyEx.getStaId());
+					
+					staffDemocracy.setNumber(staffDemocracyEx.getNumber());
+					staffDemocracy.setTop(staffDemocracyEx.getTop());
+					staffDemocracy.setGood(staffDemocracyEx.getGood());
+					staffDemocracy.setWeak(staffDemocracyEx.getWeak());
+					staffDemocracy.setNomal(staffDemocracyEx.getNomal());
+					staffDemocracy.setAbstention(staffDemocracyEx.getAbstention());
+					
+					staffDemocracy.setDfinal(getDFinal(staffDemocracy));
+					
+					// 计算公式，计算最终结果
+					staffDemocracyRepository.save(staffDemocracy);
+					
+					staffEvaluationRepository.updateDemocracyBystaIdAndYear(
+							staffDemocracy.getDfinal(), 
+							staffDemocracy.getStaId(), 
+							staffDemocracy.getYear()
+					);
+				}
+			}
+			
+			return Result.ok("保存成功");
+			
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/info/{id}")
+	@ResponseBody
+	public Map<String,Object> info(
+			@PathVariable("id") Integer id){
+		try{
+			StaffDemocracyEx info = staffDemocracyRepository.findOneStaffDemocracy(id);
+			return Result.ok().put("data", info);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+
+	@RequestMapping("/save/info")
+	@ResponseBody
+	public Map<String,Object> saveInfo(
+			@RequestBody StaffDemocracyEx staffDemocracyEx){
+		try{
+			StaffDemocracy staffDemocracy = staffDemocracyRepository.findOne(staffDemocracyEx.getId());
+			
+			if(staffDemocracy == null){
+				return Result.error("保存失败");
+			}
+			
+			int year = staffDemocracy.getYear();
+			StaffProcess staffProcess = staffProcessRepository.findProcessByYear(year);
+			if(staffProcess == null || staffProcess.getComplete() == 1){
+				return Result.error("保存失败");
+			}
+			
+			if(staffDemocracyEx.getNumber() != staffDemocracyEx.getTop() + staffDemocracyEx.getGood() + staffDemocracyEx.getNomal() + staffDemocracyEx.getWeak() + staffDemocracyEx.getAbstention()){
+				return Result.error("数据信息不正确，保存失败");
+			}
+			
+			staffDemocracy.setDepId(staffDemocracyEx.getDepId());
+			staffDemocracy.setNumber(staffDemocracyEx.getNumber());
+			staffDemocracy.setTop(staffDemocracyEx.getTop());
+			staffDemocracy.setGood(staffDemocracyEx.getGood());
+			staffDemocracy.setNomal(staffDemocracyEx.getNomal());
+			staffDemocracy.setWeak(staffDemocracyEx.getWeak());
+			staffDemocracy.setAbstention(staffDemocracyEx.getAbstention());
+			
+			// 计算结果
+			staffDemocracy.setDfinal(this.getDFinal(staffDemocracy));
+			
+			staffDemocracyRepository.save(staffDemocracy);
+			
+			staffEvaluationRepository.updateDemocracyBystaIdAndYear(
+					staffDemocracy.getDfinal(), 
+					staffDemocracy.getDepId(), 
+					staffDemocracy.getYear()
+			);
+			return Result.ok("保存成功");
+		} catch (Exception e){
+			return Result.error("保存失败");
+		}
+	}
+}

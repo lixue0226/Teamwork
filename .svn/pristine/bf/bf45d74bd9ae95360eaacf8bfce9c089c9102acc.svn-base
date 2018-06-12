@@ -1,0 +1,65 @@
+<aside class="main-sidebar">
+  <section class="sidebar">
+    	<ul class="sidebar-menu">
+    		<li class="treeview <#if rc.getRequestUri()?contains("/manage/dashboard") >active</#if>">
+    			<a href="${rc.contextPath}/manage/dashboard"><i class="fa fa-dashboard"></i><span>仪表盘</span>
+        		</a>
+        	</li>
+        	<#if user.status == 1>
+    		<li class="treeview <#if rc.getRequestUri()?contains("/manage/sys") >active</#if>">
+    			<a href="#"><i class="fa fa-link"></i> <span>系统管理</span>
+          		<span class="pull-right-container">
+            			<i class="fa fa-angle-left pull-right"></i>
+          		</span>
+        		</a>
+        		<ul class="treeview-menu">
+          		<li><a href="${rc.contextPath}/manage/sys/user"><i class="fa fa-link"></i> <span>系统管理员管理</span></a></li>
+          		<li><a href="${rc.contextPath}/manage/sys/staff"><i class="fa fa-link"></i> <span>单位管理员管理</span></a></li>
+        		</ul>
+    		</li>
+    		<li class="treeview <#if rc.getRequestUri()?contains("/manage/cms") >active</#if>">
+    			<a href="#"><i class="fa fa-link"></i> <span>内容管理</span>
+          		<span class="pull-right-container">
+            		<i class="fa fa-angle-left pull-right"></i>
+          		</span>
+        		</a>
+        		<ul class="treeview-menu">
+          		<li><a href="${rc.contextPath}/manage/cms/notice/1"><i class="fa fa-link"></i> <span>通知管理</span></a></li>
+          		<li><a href="${rc.contextPath}/manage/cms/notice/2"><i class="fa fa-link"></i> <span>公告管理</span></a></li>
+          		<li><a href="${rc.contextPath}/manage/cms/notice/3"><i class="fa fa-link"></i> <span>下载管理</span></a></li>
+          		<li><a href="${rc.contextPath}/manage/cms/advertisement"><i class="fa fa-link"></i> <span>广告管理</span></a></li>
+        		</ul>
+    		</li>
+    		<li class="treeview <#if rc.getRequestUri()?contains("/manage/department") >active</#if>">
+    			<a href="#"><i class="fa fa-link"></i> <span>部门考核</span>
+          		<span class="pull-right-container">
+            	  	<i class="fa fa-angle-left pull-right"></i>
+          		</span>
+        		</a>
+        		<ul class="treeview-menu">
+          			<li><a href="${rc.contextPath}/manage/department"><i class="fa fa-link"></i> <span>部门管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/tree"><i class="fa fa-link"></i> <span>单位树管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/comment"><i class="fa fa-link"></i> <span>政策评价管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/democracy"><i class="fa fa-link"></i> <span>民主测评管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/evaluation"><i class="fa fa-link"></i> <span>单位考核汇总</span></a></li>
+        		</ul>
+    		</li>
+    		<li class="treeview <#if rc.getRequestUri()?contains("/manage/staff") >active</#if>">
+    			<a href="#"><i class="fa fa-link"></i> <span>人员考核</span>
+          		<span class="pull-right-container">
+            	  	<i class="fa fa-angle-left pull-right"></i>
+          		</span>
+        		</a>
+        		<ul class="treeview-menu">
+          			<li><a href="${rc.contextPath}/manage/staff"><i class="fa fa-link"></i> <span>人员管理</span></a></li>
+        		</ul>
+    		</li>
+    		<#elseif user.status == 2>
+    		
+    		</#if>
+    	</ul>
+    	
+  </section>
+        
+</aside>
+

@@ -1,0 +1,38 @@
+package com.ewaytek.repository;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.DepartmentComment;
+import com.ewaytek.model.DepartmentDemocracy;
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.pojo.DepartmentCommentEx;
+import com.ewaytek.model.pojo.DepartmentDemocracyEx;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+
+public interface DepartmentCommentRepository extends JpaRepository<DepartmentComment, Integer>, JpaSpecificationExecutor<DepartmentComment> {
+
+	@Modifying(clearAutomatically=true)
+	@Query("delete from DepartmentComment t where t.year = :year")
+	@Transactional
+	void deleteTreeByYear(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentCommentEx(dc.id, dc.depId, dc.depLevel, d.name, dc.maxLayer, dc.content) from DepartmentComment dc, Department d where dc.depId = d.id and dc.year = :year and d.name like %:name% order by dc.id desc")
+	List<DepartmentCommentEx> findDepartmentComment(@Param("year") Integer year, @Param("name") String name);
+	
+	@Query("from DepartmentComment dd where dd.year = :year")
+	List<DepartmentComment> findDepartmentComment(@Param("year") Integer year);
+	
+	@Query("select new com.ewaytek.model.pojo.DepartmentCommentEx(dc.id, dc.depId, dc.depLevel, d.name, dc.maxLayer, dc.content) from DepartmentComment dc, Department d where dc.depId = d.id and dc.year = :year and d.name like %:name%")
+	Page<DepartmentCommentEx> findDepartmentComment(@Param("year") Integer year, @Param("name") String name, Pageable page);
+}

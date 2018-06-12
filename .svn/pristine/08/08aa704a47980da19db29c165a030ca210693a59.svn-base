@@ -1,0 +1,363 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+<style type="text/css">
+.ui-jqgrid .ui-jqgrid-btable tbody tr.jqgrow td {
+	white-space: normal !important;
+	height:auto;
+	vertical-align:text-top;
+	padding-top:2px;
+ }
+</style>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script src="${rc.contextPath}/libs/ajaxupload.js"></script>
+<script type="text/javascript">
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 0; i < 10; i++){
+	yearlist.push({
+		value: date - i,
+		text : date - i
+	})
+}
+
+
+data = $.extend(
+	data,{
+		q : {
+			page : 1,
+			limit : 10,
+			name : "",
+			year : 0
+		},
+		process : {
+			
+		},
+		layers : [
+			{id:4,name:"好班子"},
+			{id:3,name:"较好班子"},
+			{id:2,name:"一般班子"},
+			{id:1,name:"差班子"}
+		],
+		page : {},
+		years : ${years},
+		title : null,
+		disabled : false,
+		item : {},
+		comment : {
+		},
+		importData : {
+			
+		}
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'year': vm.q.year, 'name': vm.q.name},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(item){
+			vm.comment = {};
+			vm.item = item;
+			vm.title = "新增";
+			vm.dialog();
+		},
+		update: function(){
+			
+		},
+		del: function(item, index){
+			var contentItems = [];
+			for(var i = 0; i < item.contentItems.length; i++){
+				if( i != index){
+					contentItems.push(item.contentItems[i]);
+				}
+			}
+			item.contentItems = contentItems;
+			// item.contentItems.splice(comment, 1);
+			if(vm.process != null && vm.process.complete != 1){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/department/comment/save/info",
+				    data: JSON.stringify(item),
+				    dataType: "json",
+				    contentType : 'application/json',
+				    success: function(r){
+						if(r.code == 0){
+							layer.closeAll();
+							alert(r.msg);
+							vm.reload();
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			}
+		},
+		get: function(item, index){
+			if(vm.process != null && vm.process.complete != 1){
+				// vm.comment = comment;
+				vm.item = item;
+				vm.comment = vm.item.contentItems[index];
+				vm.title = "编辑";
+				vm.dialog();
+			}
+		},
+		dialog: function(){
+			if(vm.process != null && vm.process.complete != 1){
+				if(vm.title == "新增"){
+					vm.item.contentItems.push(vm.comment);
+				}
+				layer.open({
+					type: 1,
+					skin: 'layui-layer-molv',
+					title: vm.title,
+					area: ['550px', '330px'],
+					shadeClose: false,
+					content: jQuery("#formLayer"),
+					btn: ['确定','取消'],
+					btn1: function (index) {
+						if(vm.process != null && vm.process.complete != 1){
+							$.ajax({
+								type: "POST",
+							    url: baseURL + "/api/department/comment/save/info",
+							    data: JSON.stringify(vm.item),
+							    dataType: "json",
+							    contentType : 'application/json',
+							    success: function(r){
+									if(r.code == 0){
+										layer.closeAll();
+										alert(r.msg);
+										vm.reload();
+									}else{
+										alert(r.msg);
+									}
+								}
+							});
+						}
+		            }
+				});
+			}
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/department/comment/list/',
+        datatype: "json",
+        colModel: [			
+			{ label: '单位编号', name: 'depId', index: "depId", width: 45, key: true, sortable: false, hidden:true },
+			{ label: '单位名称', name: 'depName', width: 75, sortable: false },
+			{ label: '单位属性', name: 'depLevel', width: 75, sortable: false, formatter: function(value, options, row){
+				return ["","市直(不考核)","市直(考核)","县区","功能区"][value];
+			}},
+			{ label: '最大层级', name: 'maxYear', width: 90, sortable: false,formatter:function(value, options, row){
+				return ["","差班子","一般班子","较好班子","好班子"][value];
+			} },
+			{ label: '评论', name: 'contentItems', index: "contentItems", width: 150, sortable: false, formatter:function(value, options, row){
+				if(value.length == 0){
+					return "";
+				}
+				var table = '<table class="ui-jqgrid-btable ui-common-table table table-bordered" style="margin-bottom:0px;">';
+				var $row = JSON.stringify(row).replace(/\"/g,"'");
+				for(var i = 0; i< value.length; i++){
+					table += "<tr>"
+					table = table + '<td class="ui-th-column ui-th-ltr " style="width:30%;">'+ value[i].comment +'</td>';
+					table = table + '<td class="ui-th-column ui-th-ltr " style="width:30%;">'+ ["","差班子","一般班子","较好班子","好班子"][value[i].max] +'</td>';
+					table += "<td>";
+					// $value = JSON.stringify(value[i]).replace(/\"/g,"'");
+					if(vm.process != null && vm.process.complete != 1){
+						table += '<a class="btn btn-primary" href="#" onclick="vm.del('+$row+','+i+')" ><i class="fa fa-trash-o"></i>&nbsp;删除</a>&nbsp;&nbsp;'
+						table += '<a class="btn btn-primary" href="#" onclick="vm.get('+$row+','+i+')" ><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>'
+					}
+					
+					table += "</td>"
+					table += "</tr>"
+				}
+				table += "</table>"
+				return table;
+			} },
+			{ label: '操作', name: 'id', index: "id", width: 80, sortable: false, formatter: function(value, options, row){
+				var process = $("#jqGrid").getGridParam('userData');
+				var $row = JSON.stringify(row).replace(/\"/g,"'");
+				if(process != null && process.complete != 1){
+					return '<a class="btn btn-primary" onclick="vm.add('+$row+')"><i class="fa fa-pencil-square-o"></i>&nbsp;添加</a>';
+				} else {
+					return '';
+				}
+			}}
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 100,
+		rowList : [10,30, 50, 100, 150, 200],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: false,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount",
+            userdata: "process"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        postData : {
+        	year : vm.q.year
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        	vm.process = $("#jqGrid").getGridParam('userData');
+        	if(vm.process != null){
+        		vm.q.year = vm.process.year;
+        	}
+        }
+    });
+	new AjaxUpload('#upload', {
+        action: baseURL + '/api/department/comment/upload',
+        name: 'file',
+        autoSubmit:true,
+        responseType:"json",
+        onSubmit:function(file, extension){
+            if (!(extension && /^(xls)$/.test(extension.toLowerCase()))){
+                alert('只支持xls格式的图片！');
+                return false;
+            }
+        },
+        onComplete : function(file, r){
+            if(r.code == 0){
+            	vm.importData = r.data;
+            	layer.open({
+    				type: 1,
+    				skin: 'layui-layer-molv',
+    				title: vm.title,
+    				area: ['750px', '400px'],
+    				shadeClose: false,
+    				content: jQuery("#dataLayer"),
+    				btn: ['确定','取消'],
+    				btn1: function (index) {
+    					$.ajax({
+    						type: "POST",
+    					    url: baseURL + "/api/department/comment/save",
+    					    data: JSON.stringify(vm.importData),
+    					    dataType: "json",
+    					    contentType : 'application/json',
+    					    success: function(r){
+    							if(r.code == 0){
+    								layer.closeAll();
+    								alert(r.msg);
+    								vm.reload();
+    							}else{
+    								alert(r.msg);
+    							}
+    						}
+    					});
+    	            }
+    			});
+            }else{
+                alert(r.msg);
+            }
+        }
+    });
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="政策评价管理" contentLevel="部门考核" pageTitle="政策评价管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<select class="form-control" v-model="q.year" @change="query">
+			<option v-for="option in years" v-bind:value="option">
+				{{ option }}
+			</option>
+		</select>
+	</div>
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="单位名称">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" id="upload" v-show="process != null && process.complete != 1"><i class="fa fa-plus"></i>&nbsp;导入</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">评论内容</div>
+		   	<div class="col-sm-10">
+		      	<input type="text" class="form-control" v-model="comment.comment" placeholder="评论内容"/>
+		    </div>
+		</div>
+		<div class="form-group">
+			<div class="col-sm-2 control-label">评论层级</div>
+			<div class="col-sm-10">
+				<label v-for="layer in layers" class="checkbox-inline">
+				  <input type="radio" name="layer" :value="layer.id" v-model="comment.max">{{layer.name}}
+				</label>
+			</div>
+		</div>
+		<!-- 
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">评论层级</div>
+		   	<div class="col-sm-10">
+		      	<input type="text" class="form-control" v-model="comment.value" placeholder="评论结果"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">年限</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="comment.max" placeholder="年限"/>
+		    </div>
+		</div>
+		 -->
+	</form>
+</div>
+<div id="dataLayer" style="display: none;">
+	<table id="dataTable" class="ui-jqgrid-btable ui-common-table table table-bordered">
+		<tbody>
+			<tr class="ui-jqgrid-labels">
+				<th class="ui-th-column ui-th-ltr ">单位编号</th>
+				<th class="ui-th-column ui-th-ltr ">单位名称</th>
+				<th class="ui-th-column ui-th-ltr ">最大层级</th>
+				<th class="ui-th-column ui-th-ltr ">评论内容</th>
+				<th class="ui-th-column ui-th-ltr ">评论层级</th>
+				<th class="ui-th-column ui-th-ltr ">错误信息</th>
+			</tr>
+			<tr class="jqgrow ui-row-ltr" v-for="item in importData" >
+				<td class="ui-th-column ui-th-ltr " >{{item.depId}}</td>
+				<td class="ui-th-column ui-th-ltr " >{{item.depName}}</td>
+				<td class="ui-th-column ui-th-ltr " >{{item.maxYear}}</td>
+				<td class="ui-th-column ui-th-ltr " colspan="3" style="padding: 0px;">
+					<table class="ui-jqgrid-btable ui-common-table table table-bordered" style="margin-bottom:0px;">
+						<tr v-for="comment in item.contentItems">
+							<td class="ui-th-column ui-th-ltr " style="width:50%;">{{comment.comment}}</td>
+							<td class="ui-th-column ui-th-ltr " style="width:50%;">{{comment.max}}</td>
+						</tr>
+					</table>
+				</td>
+				<td class="ui-th-column ui-th-ltr " >{{item.message}}</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</@layout.doContent>

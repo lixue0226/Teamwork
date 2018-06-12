@@ -1,0 +1,137 @@
+package com.ewaytek.manage.api.controller.sys;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.crypto.hash.Md5Hash;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.common.validator.Assert;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.Role;
+import com.ewaytek.model.User;
+import com.ewaytek.repository.RoleRepository;
+import com.ewaytek.repository.UserRepository;
+import com.google.code.kaptcha.Constants;
+
+@Controller
+@RequestMapping("/api/role")
+public class RoleController {
+	
+	@Autowired
+	private RoleRepository roleRepository;
+
+	@RequestMapping(value="/list")
+	@ResponseBody
+	public Map<String,Object> list(
+			@RequestParam(value = "name", defaultValue = "") final String name, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer  limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Specification<Role> condtions = new Specification<Role>(){
+
+				@Override
+				public Predicate toPredicate(Root<Role> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+					Predicate usernamePredicate = cb.like(root.get("name").as(String.class), "%"+ name +"%");
+					query.where(usernamePredicate);
+					return query.getRestriction();
+				}
+				
+			};
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<Role> list = roleRepository.findAll(condtions, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/info/{id}")
+	@ResponseBody
+	public Map<String,Object> info(@PathVariable("id") String id){
+		try{
+			Role role = roleRepository.findOne(id);
+			
+			return Result.ok().put("data", role);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/save")
+	@ResponseBody
+	public Map<String,Object> info(@RequestBody Role role){
+		try {
+			if(role.getId() == null){
+				// add
+				ValidatorUtils.validateEntity(role, AddGroup.class);
+				
+				Role exist = roleRepository.findRoleByName(role.getName());
+				if(exist != null){
+					return Result.error("角色名称已存在!");
+				}
+				
+				roleRepository.save(role);
+				
+				return Result.ok("添加成功");
+			} else {
+				// edit
+				ValidatorUtils.validateEntity(role, UpdateGroup.class);
+				
+				
+				roleRepository.save(role);
+				
+				return Result.ok("修改成功");
+			}
+		} catch (Exception e) {
+			return Result.error(e.getMessage());
+		}
+	}
+	
+	@RequestMapping("/delete")
+	@ResponseBody
+	public Map<String,Object> delete(@RequestBody String[] ids){
+		
+		for (String id : ids) {
+			roleRepository.delete(id);
+		}
+		
+		return Result.ok("删除成功");
+	}
+}

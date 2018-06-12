@@ -1,0 +1,280 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.util.Date;
+
+
+/**
+ * The persistent class for the staff_resume database table.
+ * 
+ */
+@Entity
+@Table(name="staff_resume")
+@NamedQuery(name="StaffResume.findAll", query="SELECT s FROM StaffResume s")
+public class StaffResume implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int depId;
+	private String assignmentNow;
+	private String assignmentOld;
+	private String assignmentWill;
+	private String file;
+	private String fullEducation;
+	private String fullMajor;
+	private String health;
+	private String partEducation;
+	private String partMajor;
+	private String reasonsAppointmentRemoval;
+	private String reportComment;
+	private String reportComment2;
+	private String reportComment3;
+	private int reportDepId;
+	private int reportDepId2;
+	private int reportDepId3;
+	private String technologyDuty;
+	private String technologyMajor;
+	private int currentDuty;
+	private Date ddate;
+	private int staId;
+
+	public StaffResume() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="SRes_ID")
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Column(name="Dep_ID")
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+
+	@Column(name="SRes_assignment_now")
+	public String getAssignmentNow() {
+		return this.assignmentNow;
+	}
+
+	public void setAssignmentNow(String assignmentNow) {
+		this.assignmentNow = assignmentNow;
+	}
+
+
+	@Column(name="SRes_assignment_old")
+	public String getAssignmentOld() {
+		return this.assignmentOld;
+	}
+
+	public void setAssignmentOld(String assignmentOld) {
+		this.assignmentOld = assignmentOld;
+	}
+
+
+	@Column(name="SRes_assignment_will")
+	public String getAssignmentWill() {
+		return this.assignmentWill;
+	}
+
+	public void setAssignmentWill(String assignmentWill) {
+		this.assignmentWill = assignmentWill;
+	}
+
+
+	@Column(name="Sres_file")
+	public String getFile() {
+		return this.file;
+	}
+
+	public void setFile(String file) {
+		this.file = file;
+	}
+
+
+	@Column(name="SRes_full_education")
+	public String getFullEducation() {
+		return this.fullEducation;
+	}
+
+	public void setFullEducation(String fullEducation) {
+		this.fullEducation = fullEducation;
+	}
+
+
+	@Column(name="SRes_full_major")
+	public String getFullMajor() {
+		return this.fullMajor;
+	}
+
+	public void setFullMajor(String fullMajor) {
+		this.fullMajor = fullMajor;
+	}
+
+
+	@Column(name="SRes_health")
+	public String getHealth() {
+		return this.health;
+	}
+
+	public void setHealth(String health) {
+		this.health = health;
+	}
+
+
+	@Column(name="SRes_part_education")
+	public String getPartEducation() {
+		return this.partEducation;
+	}
+
+	public void setPartEducation(String partEducation) {
+		this.partEducation = partEducation;
+	}
+
+
+	@Column(name="SRes_part_major")
+	public String getPartMajor() {
+		return this.partMajor;
+	}
+
+	public void setPartMajor(String partMajor) {
+		this.partMajor = partMajor;
+	}
+
+
+	@Column(name="SRes_Reasons_appointment_removal")
+	public String getReasonsAppointmentRemoval() {
+		return this.reasonsAppointmentRemoval;
+	}
+
+	public void setReasonsAppointmentRemoval(String reasonsAppointmentRemoval) {
+		this.reasonsAppointmentRemoval = reasonsAppointmentRemoval;
+	}
+
+
+	@Column(name="SRes_report_comment")
+	public String getReportComment() {
+		return this.reportComment;
+	}
+
+	public void setReportComment(String reportComment) {
+		this.reportComment = reportComment;
+	}
+
+
+	@Column(name="SRes_report_comment2")
+	public String getReportComment2() {
+		return this.reportComment2;
+	}
+
+	public void setReportComment2(String reportComment2) {
+		this.reportComment2 = reportComment2;
+	}
+
+
+	@Column(name="SRes_report_comment3")
+	public String getReportComment3() {
+		return this.reportComment3;
+	}
+
+	public void setReportComment3(String reportComment3) {
+		this.reportComment3 = reportComment3;
+	}
+
+
+	@Column(name="SRes_report_DepID")
+	public int getReportDepId() {
+		return this.reportDepId;
+	}
+
+	public void setReportDepId(int reportDepId) {
+		this.reportDepId = reportDepId;
+	}
+
+
+	@Column(name="SRes_report_DepID2")
+	public int getReportDepId2() {
+		return this.reportDepId2;
+	}
+
+	public void setReportDepId2(int reportDepId2) {
+		this.reportDepId2 = reportDepId2;
+	}
+
+
+	@Column(name="SRes_report_DepID3")
+	public int getReportDepId3() {
+		return this.reportDepId3;
+	}
+
+	public void setReportDepId3(int reportDepId3) {
+		this.reportDepId3 = reportDepId3;
+	}
+
+
+	@Column(name="SRes_technology_duty")
+	public String getTechnologyDuty() {
+		return this.technologyDuty;
+	}
+
+	public void setTechnologyDuty(String technologyDuty) {
+		this.technologyDuty = technologyDuty;
+	}
+
+
+	@Column(name="SRes_technology_major")
+	public String getTechnologyMajor() {
+		return this.technologyMajor;
+	}
+
+	public void setTechnologyMajor(String technologyMajor) {
+		this.technologyMajor = technologyMajor;
+	}
+
+
+	@Column(name="Sta_current_duty")
+	public int getCurrentDuty() {
+		return this.currentDuty;
+	}
+
+	public void setCurrentDuty(int currentDuty) {
+		this.currentDuty = currentDuty;
+	}
+
+	@JsonFormat(pattern = "yyyy/MM/dd")
+	@Temporal(TemporalType.DATE)
+	@Column(name="Sta_date")
+	public Date getDdate() {
+		return this.ddate;
+	}
+
+	public void setDdate(Date ddate) {
+		this.ddate = ddate;
+	}
+
+
+	@Column(name="Sta_ID")
+	public int getStaId() {
+		return this.staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+}

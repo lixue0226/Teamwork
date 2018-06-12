@@ -1,0 +1,142 @@
+package com.ewaytek.manage.api.controller.staff;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.shiro.crypto.hash.Md5Hash;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.Staff;
+import com.ewaytek.model.StaffActivity;
+import com.ewaytek.model.User;
+import com.ewaytek.repository.StaffActivityRepository;
+import com.ewaytek.repository.StaffRepository;
+
+@Controller
+@RequestMapping("/api/staff/activity")
+public class StaffActivityController{
+	
+@Autowired
+ private StaffActivityRepository staffActivityRepository;
+
+@RequestMapping(value="/list")
+@ResponseBody
+public Map<String,Object> list(
+		@RequestParam(value = "name", defaultValue = "") final String name, 
+		@RequestParam(value = "page", defaultValue = "1") Integer page, 
+		@RequestParam(value = "limit", defaultValue = "10") Integer  limit){
+	try{
+		
+		
+		Pageable pageable = new PageRequest(page - 1, limit);
+		
+		Specification<StaffActivity> condtions = new Specification<StaffActivity>(){
+
+			@Override
+			public Predicate toPredicate(Root<StaffActivity> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				Predicate usernamePredicate = cb.like(root.get("name").as(String.class), "%"+ name +"%");
+				Predicate typePredicate = cb.equal(root.get("type").as(Integer.class), 1);
+				query.where(typePredicate, usernamePredicate);
+				return query.getRestriction();
+			}
+			
+		};
+		
+		Map<String, Object> result = new HashMap<String, Object>();
+		
+		Page<StaffActivity> list = staffActivityRepository.findAll(condtions, pageable);
+		
+		result.put("totalPage", list.getTotalPages());
+		result.put("currPage", page);
+		result.put("totalCount", list.getTotalElements());
+		result.put("list", list.getContent());
+		
+		return Result.ok().put("page", result);
+		
+	} catch (Exception e){
+		return Result.ok().put("page", new HashMap<String, Object>());
+	}
+}
+
+@RequestMapping("/info/{id}")
+@ResponseBody
+public Map<String,Object> info(@PathVariable("id") Integer id){
+	try{
+		StaffActivity activity = staffActivityRepository.findOne(id);
+		
+		return Result.ok().put("data", activity);
+	} catch (Exception e){
+		return Result.ok().put("data", new HashMap<String, Object>());
+	}
+}
+
+@RequestMapping("/save")
+@ResponseBody
+public Map<String,Object> info(@RequestBody StaffActivity activity){
+	try {
+		if(activity.getId() == 0){
+			// add
+			ValidatorUtils.validateEntity(activity, AddGroup.class);
+			activity.setDepId(activity.getDepId());
+            activity.setStaId(activity.getStaId());
+			staffActivityRepository.save(activity);
+			return Result.ok("添加成功");
+		} else {
+			// edit
+			ValidatorUtils.validateEntity(activity, UpdateGroup.class);
+			
+			StaffActivity userOld = staffActivityRepository.findOne(activity.getId());
+			userOld.setDepId(activity.getDepId());
+			userOld.setStaId(activity.getStaId());
+			userOld.setName(activity.getName());
+			userOld.setLocation(activity.getLocation());
+			userOld.setPicture(activity.getPicture());
+			userOld.setVideo(activity.getVideo());
+			userOld.setAccessory(activity.getAccessory());
+			
+			
+			
+			staffActivityRepository.save(userOld);
+			
+			return Result.ok("修改成功");
+		}
+	} catch (Exception e) {
+		return Result.error(e.getMessage());
+	}
+}
+
+@RequestMapping("/delete")
+@ResponseBody
+public Map<String,Object> delete(@RequestBody Integer[] ids){		
+	if(ArrayUtils.contains(ids, ShiroUtils.getUserId())){
+		return Result.error("当前用户不能删除");
+	}
+	
+	for (Integer id : ids) {
+		staffActivityRepository.delete(id);
+	}
+	
+	return Result.ok("删除成功");
+}
+}

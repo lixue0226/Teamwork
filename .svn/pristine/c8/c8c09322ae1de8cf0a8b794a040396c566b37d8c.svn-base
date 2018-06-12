@@ -1,0 +1,28 @@
+package com.ewaytek.repository;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.DepartmentProcess;
+
+public interface DepartmentProcessRepository extends JpaRepository<DepartmentProcess, Integer>, JpaSpecificationExecutor<DepartmentProcess> {
+
+	@Query("from DepartmentProcess d where d.year = :year")
+	DepartmentProcess findProcessByYear(@Param("year") Integer year);
+	
+	@Query("select Distinct d.year from DepartmentProcess d")
+	List<Integer> findDistinctYear();
+	
+	@Query("select Distinct d.year from DepartmentProcess d order by d.year desc")
+	List<Integer> findDistinctYearOrderDesc();
+	
+	@Query(value = "select * from department_process d order by DCom_ID desc limit 1", nativeQuery=true)
+	DepartmentProcess fetchCurrent();
+}

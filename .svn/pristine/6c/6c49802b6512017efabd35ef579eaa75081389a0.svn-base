@@ -1,0 +1,121 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_activity database table.
+ * 
+ */
+@Entity
+@Table(name="staff_activity")
+@NamedQuery(name="StaffActivity.findAll", query="SELECT s FROM StaffActivity s")
+public class StaffActivity implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int depId;
+	private String accessory;
+	private String location;
+	private String name;
+	private String picture;
+	private int state;
+	private String video;
+	private int staId;
+
+	public StaffActivity() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="SAct_ID")
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Column(name="Dep_ID")
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+
+	@Column(name="Sact_accessory")
+	public String getAccessory() {
+		return this.accessory;
+	}
+
+	public void setAccessory(String accessory) {
+		this.accessory = accessory;
+	}
+
+
+	@Column(name="Sact_location")
+	public String getLocation() {
+		return this.location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+
+	@Column(name="SAct_Name")
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+
+	@Column(name="Sact_picture")
+	public String getPicture() {
+		return this.picture;
+	}
+
+	public void setPicture(String picture) {
+		this.picture = picture;
+	}
+
+
+	@Column(name="Sact_state")
+	public int getState() {
+		return this.state;
+	}
+
+	public void setState(int state) {
+		this.state = state;
+	}
+
+
+	@Column(name="Sact_video")
+	public String getVideo() {
+		return this.video;
+	}
+
+	public void setVideo(String video) {
+		this.video = video;
+	}
+
+
+	@Column(name="Sta_ID", insertable=false, updatable=false)
+	public int getStaId() {
+		return this.staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+}

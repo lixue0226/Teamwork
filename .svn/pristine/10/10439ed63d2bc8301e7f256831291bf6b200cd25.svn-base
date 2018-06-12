@@ -1,0 +1,26 @@
+<aside class="main-sidebar">
+  <section class="sidebar">
+    	<ul class="sidebar-menu">
+    		<li class="treeview <#if rc.getRequestUri()?contains("/manage/dashboard") >active</#if>">
+    			<a href="${rc.contextPath}/manage/dashboard"><i class="fa fa-dashboard"></i><span>仪表盘</span>
+        		</a>
+        	</li>
+        	<li class="treeview <#if rc.getRequestUri()?contains("/manage/department") >active</#if>">
+    			<a href="#"><i class="fa fa-link"></i> <span>人员考核</span>
+          		<span class="pull-right-container">
+            	  	<i class="fa fa-angle-left pull-right"></i>
+          		</span>
+        		</a>
+        		<ul class="treeview-menu">
+          			<li><a href="${rc.contextPath}/manage/department/staff"><i class="fa fa-link"></i> <span>人员管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/staff/comment"><i class="fa fa-link"></i> <span>政策评价管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/staff/democracy"><i class="fa fa-link"></i> <span>民主测评管理</span></a></li>
+          			<li><a href="${rc.contextPath}/manage/department/staff/evaluation"><i class="fa fa-link"></i> <span>人员考核汇总</span></a></li>
+        		</ul>
+    		</li>
+    	</ul>
+    	
+  </section>
+        
+</aside>
+

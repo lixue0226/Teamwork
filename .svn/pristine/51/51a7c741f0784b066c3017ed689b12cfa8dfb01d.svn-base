@@ -1,0 +1,129 @@
+package com.ewaytek.manage.api.controller.staff;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.shiro.crypto.hash.Md5Hash;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.common.validator.ValidatorUtils;
+import com.ewaytek.common.validator.group.AddGroup;
+import com.ewaytek.common.validator.group.UpdateGroup;
+import com.ewaytek.model.StaffResume;
+import com.ewaytek.model.User;
+import com.ewaytek.model.pojo.StaffResumeEx;
+import com.ewaytek.repository.StaffResumeRepository;
+
+@Controller
+@RequestMapping("/api/department/staff/resume/")
+public class StaffResumeController {
+	
+	@Autowired
+	private StaffResumeRepository staffResumeRepository;
+
+	@RequestMapping(value="/{id}/list")
+	@ResponseBody
+	public Map<String,Object> list(
+			@PathVariable("id") int staId,
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer  limit) {
+		
+		try{
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			
+			Page<StaffResumeEx> list = staffResumeRepository.findStaffResumeById(staId, pageable);
+			
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result);
+			
+		} catch (Exception e){
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/info/{id}")
+	@ResponseBody
+	public Map<String,Object> info(@PathVariable("id") Integer id){
+		try{
+			StaffResume staffResume = staffResumeRepository.findOne(id);
+			
+			return Result.ok().put("data", staffResume);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/{id}/save")
+	@ResponseBody
+	public Map<String,Object> save(@PathVariable("id") Integer id , @RequestBody StaffResume staffResume){
+		try {
+			if(staffResume.getId() == 0){
+				// add
+				ValidatorUtils.validateEntity(staffResume, AddGroup.class);
+				
+				staffResume.setStaId(id);
+				staffResumeRepository.save(staffResume);
+				
+				return Result.ok("添加成功");
+			} else {
+				// edit
+				ValidatorUtils.validateEntity(staffResume, UpdateGroup.class);
+				
+//				StaffResume userOld = staffResumeRepository.findOne(staffResume.getId());
+//				userOld.setCurrentDuty(staffResume.getCurrentDuty());
+//				userOld.setHealth(staffResume.getHealth());
+//				userOld.setTechnologyDuty(staffResume.getTechnologyDuty());
+//				userOld.setTechnologyMajor(staffResume.getTechnologyMajor());
+//				userOld.setFullEducation(staffResume.getFullEducation());
+//				userOld.setFullMajor(staffResume.getFullMajor());
+//				userOld.setPartEducation(staffResume.getFullEducation());
+//				userOld.setPartMajor(staffResume.getPartMajor());
+//				userOld.setDepId(staffResume.getDepId());
+//				userOld.setAssignmentNow(staffResume.getAssignmentNow());
+//				userOld.setAssignmentOld(staffResume.getAssignmentOld());
+//				userOld.setAssignmentWill(staffResume.getAssignmentWill());
+//				userOld.setReasonsAppointmentRemoval(staffResume.getReasonsAppointmentRemoval());
+//				userOld.setReportDepId(staffResume.getReportDepId());
+//				userOld.setReportDepId2(staffResume.getReportDepId2());
+//				userOld.setReportDepId3(staffResume.getReportDepId3());
+//				userOld.setReportComment(staffResume.getReportComment());
+//				userOld.setReportComment2(staffResume.getReportComment2());
+//				userOld.setReportComment3(staffResume.getReportComment3());
+//				userOld.setDdate(staffResume.getDdate());
+//				userOld.setFile(staffResume.getFile());
+				
+				// staffResume.setStaId(id);
+				staffResumeRepository.save(staffResume);
+				
+				return Result.ok("修改成功");
+			}
+		} catch (Exception e) {
+			return Result.error(e.getMessage());
+		}
+	}
+
+}

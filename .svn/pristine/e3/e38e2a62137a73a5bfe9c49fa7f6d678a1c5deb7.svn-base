@@ -1,0 +1,188 @@
+package com.ewaytek.manage.api.controller.staff;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.transaction.Transactional;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.crypto.hash.Md5Hash;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ewaytek.common.utils.Result;
+import com.ewaytek.common.utils.ShiroUtils;
+import com.ewaytek.model.StaffEvaluation;
+import com.ewaytek.model.StaffProcess;
+import com.ewaytek.model.User;
+import com.ewaytek.model.pojo.StaffEvaluationEx;
+import com.ewaytek.repository.StaffEvaluationRepository;
+import com.ewaytek.repository.StaffProcessRepository;
+
+@Controller
+@RequestMapping("/api/department/staff/evaluation")
+public class StaffEvaluationController {
+	
+	@Autowired
+	private StaffProcessRepository staffProcessRepository;
+	
+	@Autowired
+	private StaffEvaluationRepository staffEvaluationRepository;
+
+	@RequestMapping(value="/list")
+	@ResponseBody
+	public Map<String,Object> list(
+			@RequestParam(value = "year", defaultValue = "0") Integer year, 
+			@RequestParam(value = "name", defaultValue = "") final String name, 
+			@RequestParam(value = "page", defaultValue = "1") Integer page, 
+			@RequestParam(value = "limit", defaultValue = "10") Integer limit) {
+		
+		try{
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			StaffProcess staffProcess = null;
+			if(year == 0){
+				staffProcess = staffProcessRepository.fetchCurrent();
+				year = staffProcess.getYear();
+			} else {
+				staffProcess = staffProcessRepository.findProcessByYear(year);
+			}
+			
+			Pageable pageable = new PageRequest(page - 1, limit);
+			
+			Page<StaffEvaluationEx> list = staffEvaluationRepository.findStaffEvaluation(year, depId, name, pageable);
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			result.put("totalPage", list.getTotalPages());
+			result.put("currPage", page);
+			result.put("totalCount", list.getTotalElements());
+			result.put("list", list.getContent());
+			
+			return Result.ok().put("page", result).put("process", staffProcess);
+			
+		} catch (Exception e){
+			e.printStackTrace();
+			return Result.ok().put("page", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/info/{id}")
+	@ResponseBody
+	public Map<String,Object> info(@PathVariable("id") Integer id){
+		try{
+			StaffEvaluation evaluation = staffEvaluationRepository.findOne(id);
+			
+			return Result.ok().put("data", evaluation);
+		} catch (Exception e){
+			return Result.ok().put("data", new HashMap<String, Object>());
+		}
+	}
+	
+	@RequestMapping("/save/info")
+	@ResponseBody
+	public Map<String,Object> saveInfo(@RequestBody StaffEvaluation evaluation){
+		try {
+			if(evaluation.getId() != 0){				
+				staffEvaluationRepository.save(evaluation);
+				
+				return Result.ok("保存成功");
+			} else {
+				return Result.error("保存失败");
+			}
+		} catch (Exception e) {
+			return Result.error(e.getMessage());
+		}
+	}
+
+	@RequestMapping("/calc")
+	@ResponseBody
+	@Transactional
+	public Map<String,Object> calc(){
+		try {
+			// 获取当前用户
+			User user = ShiroUtils.getUserEntity();
+			
+			int depId = user.getDepId();
+			
+			// 获取最新的一条数据
+			StaffProcess staffProcess = staffProcessRepository.fetchCurrent();
+			
+			if(staffProcess == null){
+				return Result.error("还未开始任何考评");
+			}
+			
+			if(staffProcess.getComplete() == 1){
+				return Result.error("已经完成考评，不能进行推算!");
+			}
+			
+			List<StaffEvaluation> staffEvaluations = staffEvaluationRepository.findCalcStaffEvaluation(staffProcess.getYear(), depId);
+			
+			if(staffEvaluations.size() > 0){
+				return Result.error("员工考评信息还没有填写完毕，清等待保存完毕!");
+			}
+			
+			staffEvaluations = staffEvaluationRepository.findStaffEvaluation(staffProcess.getYear(), depId);
+			
+			for(int i = 0; i < staffEvaluations.size(); i++){
+				StaffEvaluation staffEvaluation = staffEvaluations.get(i);
+				
+				if(staffEvaluation.getAdjust() != 0){
+					staffEvaluation.setDfinal(staffEvaluation.getAdjust());
+				} else {
+//					if(staffEvaluation.getDepLevel() == 1){
+//						// 算法一
+//					} else {
+//						// 算法二
+//					}
+//					int max = 4;
+//					max = Math.min(departmentEvaluation.getLeader(), max);
+//					max = Math.min(departmentEvaluation.getComment(), max);
+//					max = Math.min(departmentEvaluation.getDemocracy(), max);
+//					max = Math.min(departmentEvaluation.getAchievement(), max);
+//					
+//					departmentEvaluation.setdCalc(max);
+//					
+//					if(departmentEvaluation.getdFix() != 0){
+//						departmentEvaluation.setDfinal(departmentEvaluation.getdFix());
+//					} else {
+//						departmentEvaluation.setDfinal(max);
+//					}
+//					
+//					if(max != 4){
+//						if(departmentEvaluation.getLeader() < departmentEvaluation.getDemocracy()){
+//							departmentEvaluation.setMark("领导测评低于民主测评");
+//						}
+//					}
+					
+					int max = Math.min(staffEvaluation.getDemocracy(), staffEvaluation.getComment());
+					staffEvaluation.setDfinal(max);
+				}
+				staffEvaluationRepository.save(staffEvaluation);
+			}
+			
+			return Result.ok("推算完成");
+		} catch (Exception e) {
+			return Result.error(e.getMessage());
+		}
+	}
+}

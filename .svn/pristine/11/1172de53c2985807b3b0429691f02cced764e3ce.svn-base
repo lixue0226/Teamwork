@@ -1,0 +1,442 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+	<style type="text/css">
+		.info-box {
+			box-shadow:1px 1px 1px 1px rgba(0, 0, 0, 0.1);
+		}
+		
+		.panel.panel-vue {
+		    border-color: #419199;
+		}
+		
+		.panel.panel-vue>.panel-heading {
+		    color: #fff;
+		    background: #419199;
+		    border-color: #419199;
+		    background-position: 50%;
+		}
+		
+		.panel-title {
+		    margin-top: 0;
+		    margin-bottom: 0;
+		    font-size: 16px;
+		    color: inherit;
+		}
+		
+		ol.department li.placeholder {
+		  	position: relative;
+		}
+		ol.department li.placeholder:before {
+		  	position: absolute;
+		}
+		ol.department {
+		    padding-left: 0px;
+		}
+		
+		ol.department li {
+		    display: block;
+		    margin: 5px;
+		    padding: 5px;
+		    border: 1px solid #cccccc;
+		    color: #0088cc;
+		    background: #eeeeee;
+		}
+		
+		ol.ndepartment li {
+		    display: block;
+		    margin: 5px;
+		    padding: 5px;
+		    border: 1px solid #cccccc;
+		    color: #0088cc;
+		    background: #ff0;
+		}
+		
+		ol i.icon-move {
+		    cursor: pointer;
+		}
+	</style>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript" src="${rc.contextPath}/libs/jquery-sortable.js" ></script>
+<script type="text/javascript">
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 0; i < 10; i++){
+	yearlist.push({
+		value: date - i,
+		text : date - i
+	})
+}
+
+data = $.extend(
+	data,{
+		q : {
+			year : 0
+		},
+		load : {
+			year : 0
+		},
+		years : yearlist,
+		checkYears : [],
+		force : 0,
+		process : {
+			
+		},
+		evaluationList : [
+			{id:1,name:"参加考评"},
+			{id:0,name:"不参加考评"}
+		],
+		reasonList : [
+			{id:0,name:"没有原因"},
+			{id:1,name:"管理权限不在我市"},
+			{id:2,name:"班子不齐或仅有1人"}
+		],
+		department : {
+			
+		},
+		areas:[],
+		area1: [
+		],
+		area2: [
+		],
+		area3: [
+		],
+		area4: [
+		],
+		area5: [
+		],
+	}
+);
+methods = $.extend(
+	methods,{
+		query : function(){
+			vm.reload();
+		},
+		add : function(){
+			$.get(baseURL + "/api/department/process/create/"+vm.q.year, function(result){
+				vm.process = result.data;
+			});
+		},
+		loadSelect : function(){
+			$.get(baseURL + "/api/department/process/years/", function(result){
+				vm.checkYears = result.data;
+				layer.open({
+					type: 1,
+					skin: 'layui-layer-molv',
+					title: vm.title,
+					area: ['550px', '230px'],
+					shadeClose: false,
+					content: jQuery("#loadLayer"),
+					btn: ['确定', '取消'],
+					
+					btn1: function (index) {
+						vm.loadYear();
+						layer.close(index);
+					}
+				});
+			});
+			
+		},
+		loadYear : function(){
+			if(vm.load.year == null || vm.load.year <= 0){
+				alert("请选择参考年份");
+				return;
+			}
+			$.get(baseURL + "/api/department/process/department/"+vm.load.year, function(result){
+				vm.area1 = result.data.area1;
+				vm.area2 = result.data.area2;
+				vm.area3 = result.data.area3;
+				vm.area4 = result.data.area4;
+				vm.area5 = result.data.area5;
+			});
+		},
+		reload : function(){
+			vm.area1 = vm.area2 = vm.area3 = vm.area4 = vm.area5 = [];
+			$.get(baseURL + "/api/department/process/department/"+vm.q.year, function(result){
+				vm.area1 = result.data.area1;
+				vm.area2 = result.data.area2;
+				vm.area3 = result.data.area3;
+				vm.area4 = result.data.area4;
+				vm.area5 = result.data.area5;
+				
+				vm.process = result.process;
+				if(vm.process != null){
+					vm.q.year = vm.process.year;
+					if(vm.process.complete == 1){
+						$("ol.department").sortable("disable")
+					} else {
+						$("ol.department").sortable("enable")
+					}
+				} else {
+					$("ol.department").sortable("enable")
+				}
+			});
+		},
+		save : function(){
+			// vm.force = 0;
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['350px', '130px'],
+				shadeClose: false,
+				content: jQuery("#saveLayer"),
+				btn: ['暂存','提交', '取消'],
+				
+				btn1: function (index) {
+					vm.force = 0;
+					vm.doSave();
+				},
+				
+				btn2: function (index) {
+					vm.force = 1;
+					vm.doSave();
+				}
+			});
+			
+			
+			// vm.doSave();
+		},
+		doCheck : function(){
+			// 获取所有的未分配单位
+			
+			/*
+			if(vm.force != 0){
+				var liarea5 = $("#area5 li");
+				if(liarea5.length > 0){
+					alert("还存在未分配的单位");
+					return false;
+				}
+			}
+			*/
+			
+			var liarea1 = $("#area1 li");
+			var liarea2 = $("#area2 li");
+			var liarea3 = $("#area3 li");
+			var liarea4 = $("#area4 li");
+			
+			vm.areas = [];
+			for(var i = 0; i < liarea1.length; i++){
+				var item = $(liarea1[i]).children('span');
+				vm.areas.push({
+					depId : item.data('id'),
+					reason : 0,
+					evaluation : 0,
+					type : 1
+				});
+			}
+			
+			for(var i = 0; i < liarea2.length; i++){
+				var item = $(liarea2[i]).children('span');
+				vm.areas.push({
+					depId : item.data('id'),
+					reason : 0,
+					IsEvaluation : 0,
+					type : 2
+				});
+			}
+			
+			for(var i = 0; i < liarea3.length; i++){
+				var item = $(liarea3[i]).children('span');
+				vm.areas.push({
+					depId : item.data('id'),
+					reason : 0,
+					evaluation : 0,
+					type : 3
+				});
+			}
+			
+			for(var i = 0; i < liarea4.length; i++){
+				var item = $(liarea4[i]).children('span');
+				vm.areas.push({
+					depId : item.data('id'),
+					reason : 0,
+					evaluation : 0,
+					type : 4
+				});
+			}
+			
+			return true;
+		},
+		doSave : function(){
+			
+			if(!vm.doCheck()){
+				return;
+			}
+			
+			$.ajax({
+				type: "POST",
+			    url: baseURL + "/api/department/process/save/" + vm.q.year + "?force=" + vm.force,
+			    data: JSON.stringify(vm.areas),
+			    dataType: "json",
+			    contentType : 'application/json',
+			    success: function(r){
+					if(r.code == 0){
+						alert(r.msg);
+						vm.reload();
+					}else if (r.code == 1){
+						// 已经存在信息，是否强制更新
+						confirm(r.msg, function(){
+							vm.force = 1;
+							vm.doSave();
+						});
+					}else{
+						alert(r.msg);
+					}
+				}
+			});
+			
+			layer.close(1);
+		},
+		show : function(item){
+			/*
+			vm.department = item;
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '330px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定']
+			});
+			*/
+		}
+	}
+);
+
+$(function(){
+	vm.reload();
+	$("ol.department").sortable({
+		group : 'department',
+		handle: 'i.icon-move',
+	});
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="进度管理" contentLevel="部门考核" pageTitle="进度管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<select class="form-control" v-model="q.year" @change="query">
+			<option v-for="option in years" v-bind:value="option.value">
+				{{ option.text }}
+			</option>
+		</select>
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-default" @click="save" v-if="process == null || process.complete != 1">保存</a>
+	<a class="btn btn-default" @click="loadSelect" v-if="process == null || process.complete != 1">参考年份</a>
+</div>
+<div class="row">
+	<div class="col-md-10" style="text-align:center;height:25px;">
+		<div class="panel panel-vue">
+			<div class="panel-heading">
+				<h3 class="panel-title">南阳市</h3>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="row" style="border:0px;">
+	<div class="col-md-2" style="text-align:center;">
+		<div class="panel panel-vue">
+			<div class="panel-heading">
+				<h3 class="panel-title">县区</h3>
+			</div>
+			<ol class='department' id="area3" style="text-align:left;">
+			  	<li v-for="area in area3"><i class="icon-move fa fa-arrows"></i>&nbsp;&nbsp;&nbsp;<span @dblclick="show(area)" v-bind:data-id="area.depId" v-bind:data-reason="area.reason" v-bind:data-evaluation="area.isEvaluation">{{area.depName}}</span></li>
+			</ol>
+		</div>
+	</div>
+	
+	<div class="col-md-2" style="text-align:center;">
+		<div class="panel panel-vue">
+			<div class="panel-heading">
+				<h3 class="panel-title">功能区</h3>
+			</div>
+			<ol class='department' id="area4" style="text-align:left;">
+			  	<li v-for="area in area4"><i class="icon-move fa fa-arrows"></i>&nbsp;&nbsp;&nbsp;<span @dblclick="show(area)" v-bind:data-id="area.depId" v-bind:data-reason="area.reason" v-bind:data-evaluation="area.isEvaluation">{{area.depName}}</span></li>
+			</ol>
+		</div>
+	</div>
+
+	<div class="col-md-2" style="text-align:center;">
+		<div class="panel panel-vue">
+			<div class="panel-heading">
+				<h3 class="panel-title">市直(考评)</h3>
+			</div>
+			<ol class='department' id="area2" style="text-align:left;">
+			  	<li v-for="area in area2"><i class="icon-move fa fa-arrows"></i>&nbsp;&nbsp;&nbsp;<span @dblclick="show(area)" v-bind:data-id="area.depId" v-bind:data-reason="area.reason" v-bind:data-evaluation="area.isEvaluation">{{area.depName}}</span></li>
+			</ol>
+		</div>
+	</div>
+
+	<div class="col-md-2" style="text-align:center;">
+		<div class="panel panel-vue">
+			<div class="panel-heading">
+				<h3 class="panel-title">市直(不考评)</h3>
+			</div>
+			<ol class='department ndepartment' id="area1" style="text-align:left;">
+			  	<li v-for="area in area1"><i class="icon-move fa fa-arrows"></i>&nbsp;&nbsp;&nbsp;<span @dblclick="show(area)" v-bind:data-id="area.depId" v-bind:data-reason="area.reason" v-bind:data-evaluation="area.isEvaluation">{{area.depName}}</span></li>
+			</ol>
+		</div>
+	</div>
+
+	<div class="col-md-2" style="text-align:center;">
+		<div class="panel panel-vue">
+			<div class="panel-heading">
+				<h3 class="panel-title">其他</h3>
+			</div>
+			<ol class='department' id="area5" style="text-align:left;">
+			  	<li v-for="area in area5"><i class="icon-move fa fa-arrows"></i>&nbsp;&nbsp;&nbsp;<span @dblclick="show(area)" v-bind:data-id="area.depId" v-bind:data-reason="area.reason" v-bind:data-evaluation="area.isEvaluation">{{area.depName}}</span></li>
+			</ol>
+		</div>
+	</div>
+</div>
+
+<div id="saveLayer" style="display: none;"></div>
+<div id="loadLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+			<div class="col-sm-12">
+				<select class="form-control" v-model="load.year">
+					<option v-for="option in checkYears" v-bind:value="option">
+						{{ option }}
+					</option>
+				</select>
+			</div>
+		</div>
+	</form>
+</div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">单位名称</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="department.depName" disabled="disabled" placeholder="单位名称"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">参与考评</div>
+		   	<div class="col-sm-10">
+		      	<label v-for="item in evaluationList" class="checkbox-inline">
+					<input type="radio" name="evaluation" :value="item.id" v-model="department.isEvaluation">{{item.name}}
+				</label>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">原因</div>
+		   	<div class="col-sm-10">
+		      	<label v-for="item in reasonList" class="checkbox-inline">
+					<input type="radio" name="reason" :value="item.id" v-model="department.reason">{{item.name}}<br/>
+				</label>
+		    </div>
+		</div>
+	</form>
+</div>
+</@layout.doContent>

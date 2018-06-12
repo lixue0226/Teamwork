@@ -1,0 +1,162 @@
+package com.ewaytek.model.pojo;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.*;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+
+
+/**
+ * The persistent class for the staff_comment database table.
+ * 
+ */
+public class StaffCommentEx implements Serializable {
+	private int id;
+	private int depId;
+	private String content;
+	private int inputYear;
+	private int maxLevel;
+	private int useYear;
+	private int staId;
+	private String staName;
+	private int year;
+	private List<StaffCommentExItem> items;
+	private String message;
+
+	public StaffCommentEx(){}
+	
+	public StaffCommentEx(
+		int id,
+		int depId,
+		String content,
+		int inputYear,
+		int maxLevel,
+		int useYear,
+		int staId,
+		int year,
+		String staName
+		) {
+		this.id = id;
+		this.depId = depId;
+		this.content = content;
+		this.inputYear = inputYear;
+		this.maxLevel = maxLevel;
+		this.useYear = useYear;
+		this.staId = staId;
+		this.year = year;
+		this.staName = staName;
+		
+		List<StaffCommentExItem> contentItems = new ArrayList<StaffCommentExItem>();
+		if(this.content != null && !this.content.equals("")){
+			
+			JSONArray jsonArray = JSONArray.parseArray(this.content);
+		
+			for(int i = 0; i < jsonArray.size(); i++){
+				StaffCommentExItem item = new StaffCommentExItem();
+				
+				JSONObject object = jsonArray.getJSONObject(i);
+				item.setComment(object.getString("comment"));
+				item.setValue(object.getString("value"));
+				item.setMax(object.getString("max"));
+				item.setUsed(object.getString("used"));
+				
+				contentItems.add(item);
+			}
+		}
+		this.setItems(contentItems);
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public List<StaffCommentExItem> getItems() {
+		return items;
+	}
+
+	public void setItems(List<StaffCommentExItem> items) {
+		this.items = items;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepId() {
+		return depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public int getInputYear() {
+		return inputYear;
+	}
+
+	public void setInputYear(int inputYear) {
+		this.inputYear = inputYear;
+	}
+
+	public int getMaxLevel() {
+		return maxLevel;
+	}
+
+	public void setMaxLevel(int maxLevel) {
+		this.maxLevel = maxLevel;
+	}
+
+	public int getUseYear() {
+		return useYear;
+	}
+
+	public void setUseYear(int useYear) {
+		this.useYear = useYear;
+	}
+
+	public int getStaId() {
+		return staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+	public String getStaName() {
+		return staName;
+	}
+
+	public void setStaName(String staName) {
+		this.staName = staName;
+	}
+	
+	
+}

@@ -1,0 +1,126 @@
+package com.ewaytek.manage.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.alibaba.fastjson.JSON;
+import com.ewaytek.model.Department;
+import com.ewaytek.model.Staff;
+import com.ewaytek.model.StaffActivity;
+import com.ewaytek.repository.DepartmentRepository;
+import com.ewaytek.repository.StaffActivityRepository;
+import com.ewaytek.repository.StaffProcessRepository;
+import com.ewaytek.repository.StaffRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+@Configuration
+@RequestMapping("/manage/department")
+public class ManageDepartmentStaffViewController {
+
+	@Autowired
+	private StaffRepository staffRepository;
+	
+	@Autowired
+	private StaffProcessRepository staffProcessRepository;
+	
+	@Autowired
+	private StaffActivityRepository staffActivityRepository;
+	
+	@Autowired
+	private DepartmentRepository departmentRepository;
+	
+	@RequestMapping("/staff/{id}")
+	public String staff(Model model, @PathVariable("id") int id){
+		
+		Staff staff = staffRepository.findOne(id);
+		
+		if(staff == null){
+			return "redirect:/";
+		}
+		
+		model.addAttribute("staff", staff);
+		
+		return "manage/staff/info";
+	}
+	
+	@RequestMapping("/staff/{id}/resume")
+	public String resume(Model model, @PathVariable("id") int id){
+		
+		// 获取员工信息
+		Staff staff = staffRepository.findOne(id);
+		if(staff == null){
+			return "redirect:/";
+		}
+		model.addAttribute("staff", staff);
+		
+		// 获取单位信息
+		List<Department> departments = departmentRepository.findAll();
+		model.addAttribute("departments", JSON.toJSONString(departments));
+		
+		return "manage/staff/resume";
+	}
+	
+	@RequestMapping("/staff/{id}/relation")
+	public String relation(Model model, @PathVariable("id") int id){
+		
+		Staff staff = staffRepository.findOne(id);
+		
+		if(staff == null){
+			return "redirect:/";
+		}
+		
+		model.addAttribute("staff", staff);
+		
+		return "manage/staff/relation";
+	}
+	@RequestMapping("/staff/{id}/activity")
+	public String activity(Model model, @PathVariable("id") int id){
+		
+		StaffActivity staffActivity = staffActivityRepository.findActivityByStaff(id);
+		model.addAttribute("staff", staffActivity);
+		
+		return "manage/staff/activity";
+	}
+	
+	@RequestMapping("/staff/{id}/rewards")
+	public String rewards(Model model, @PathVariable("id") int id){
+		
+		Staff staff = staffRepository.findOne(id);
+		
+		if(staff == null){
+			return "redirect:/";
+		}
+		
+		model.addAttribute("staff", staff);
+		
+		return "manage/staff/rewards";
+	}
+	
+	
+	@RequestMapping("/staff/democracy")
+	public String democracy(Model model){
+		List<Integer> years =  staffProcessRepository.findDistinctYearOrderDesc();
+		model.addAttribute("years", String.valueOf(years));
+		return "manage/staff/democracy";
+	}
+	
+	@RequestMapping("/staff/comment")
+	public String comment(Model model){
+		List<Integer> years =  staffProcessRepository.findDistinctYearOrderDesc();
+		model.addAttribute("years", String.valueOf(years));
+		return "manage/staff/comment";
+	}
+	
+	@RequestMapping("/staff/evaluation")
+	public String evaluation(Model model){
+		List<Integer> years =  staffProcessRepository.findDistinctYearOrderDesc();
+		model.addAttribute("years", String.valueOf(years));
+		return "manage/staff/evaluation";
+	}
+}

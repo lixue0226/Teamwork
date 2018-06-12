@@ -1,0 +1,77 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_process database table.
+ * 
+ */
+@Entity
+@Table(name="staff_process")
+@NamedQuery(name="StaffProcess.findAll", query="SELECT s FROM StaffProcess s")
+public class StaffProcess implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int complete;
+	private int democracy;
+	private int year;
+	private int charge;
+
+	public StaffProcess() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="SPro_ID")
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Column(name="SPro_complete")
+	public int getComplete() {
+		return this.complete;
+	}
+
+	public void setComplete(int complete) {
+		this.complete = complete;
+	}
+
+
+	@Column(name="SPro_democracy")
+	public int getDemocracy() {
+		return this.democracy;
+	}
+
+	public void setDemocracy(int democracy) {
+		this.democracy = democracy;
+	}
+
+
+	@Column(name="SPro_year")
+	public int getYear() {
+		return this.year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+
+	@Column(name="Sro_charge")
+	public int getCharge() {
+		return this.charge;
+	}
+
+	public void setCharge(int charge) {
+		this.charge = charge;
+	}
+
+}

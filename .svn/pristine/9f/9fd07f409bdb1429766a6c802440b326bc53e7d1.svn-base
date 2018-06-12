@@ -1,0 +1,176 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		q : {
+			name : ""
+		},
+		title : null,
+		disabled : false,
+		role : {
+			status : 1
+		}
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'name': vm.q.name},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "新增角色";
+			vm.role = {};
+			vm.disabled = false;
+			
+			vm.dialog();
+		},
+		update: function(){
+			var id = getSelectedRow();
+			
+			if(id == null){
+				alert("请先选择编辑的行!")
+				return ;
+			}
+			
+			vm.title = "修改角色";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		del: function(){
+			var ids = getSelectedRows();
+			if(ids == null){
+				alert("请先选择删除的行!")
+				return ;
+			}
+			confirm('确定要删除选中的记录？', function(){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/role/delete",
+	                contentType: "application/json",
+				    data: JSON.stringify(ids),
+				    success: function(r){
+						if(r.code == 0){
+							alert('删除成功', function(){
+	                            vm.reload();
+							});
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			
+			});
+		},
+		get: function(id){
+			$.get(baseURL + "/api/role/info/"+id, function(result){
+				vm.role = result.data;
+				vm.dialog();
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['550px', '330px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/api/role/save",
+					    data: JSON.stringify(vm.role),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/role/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '角色ID', name: 'id', index: "id", width: 45, key: true, sortable: false },
+			{ label: '角色名称', name: 'name', width: 75, sortable: false }
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 10,
+		rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="角色管理" pageTitle="角色管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.name" @keyup.enter="query" placeholder="角色名称">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+	<a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>
+	<a class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">角色名称</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="role.name" :disabled="disabled" placeholder="角色名称"/>
+		    </div>
+		</div>
+	</form>
+</div>
+</@layout.doContent>

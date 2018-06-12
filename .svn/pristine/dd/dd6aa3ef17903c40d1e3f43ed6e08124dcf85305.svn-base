@@ -1,0 +1,116 @@
+<#import "layout/layout.html" as layout />
+
+<#macro header>
+	<style type="text/css">
+		.info-box {
+			box-shadow:1px 1px 1px 1px rgba(0, 0, 0, 0.1);
+		}
+	</style>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript">
+
+var yearlist = [];
+var date = new Date().getFullYear();
+for(var i = 0; i < 10; i++){
+	yearlist.push({
+		value: date - i,
+		text : date - i
+	})
+}
+
+data = $.extend(
+	data,{
+		q : {
+			year : date
+		},
+		years : yearlist,
+		process : {
+			
+		}
+	}
+);
+methods = $.extend(
+	methods,{
+		query : function(){
+			vm.reload();
+		},
+		add : function(){
+			confirm('确定要重新开始新的考核吗?', function(){
+				$.get(baseURL + "/api/department/process/create/"+vm.q.year, function(result){
+					vm.process = result.data;
+					alert(result.msg);
+				});
+			});
+		},
+		reload : function(){
+			$.get(baseURL + "/api/department/process/info/"+vm.q.year, function(result){
+				vm.process = result.data;
+			});
+		}
+	}
+);
+
+$(function(){
+	vm.reload();
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="进度管理" contentLevel="部门考核" pageTitle="进度管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<select class="form-control" v-model="q.year" @change="query">
+			<option v-for="option in years" v-bind:value="option.value">
+				{{ option.text }}
+			</option>
+		</select>
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;开始新的考核</a>
+</div>
+<div class="row" v-if="process != null">
+	<div class="col-md-3 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">一</span>
+            <div class="info-box-content">
+            	<span class="info-box-text" style="padding-top:10px;" >创建单位树</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/tree">创建单位树</a></span>
+            </div>
+        </div>
+	</div>
+	
+	<div class="col-md-3 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">二</span>
+            <div class="info-box-content">
+              	<span class="info-box-text" style="padding-top:10px;">民主测评</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/tree">上传民主测评</a></span>
+            </div>
+        </div>
+	</div>
+	
+	<div class="col-md-3 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">三</span>
+            <div class="info-box-content">
+              	<span class="info-box-text" style="padding-top:10px;">领导测评</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/tree">领导测评</a></span>
+            </div>
+        </div>
+	</div>
+	
+	<div class="col-md-3 col-sm-6 col-xs-12">
+		<div class="info-box">
+            <span class="info-box-icon bg-aqua">四</span>
+            <div class="info-box-content">
+              	<span class="info-box-text" style="padding-top:10px;">市绩效办提交</span>
+              	<span class="info-box-number"><a href="${rc.contextPath}/manage/department/tree">市绩效办提交</a></span>
+            </div>
+        </div>
+	</div>
+</div>
+</@layout.doContent>

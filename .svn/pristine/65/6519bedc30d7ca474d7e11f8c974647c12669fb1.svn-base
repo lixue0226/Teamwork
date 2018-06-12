@@ -1,0 +1,154 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_democracy database table.
+ * 
+ */
+@Entity
+@Table(name="staff_democracy")
+@NamedQuery(name="StaffDemocracy.findAll", query="SELECT s FROM StaffDemocracy s")
+public class StaffDemocracy implements Serializable {
+	private static final long serialVersionUID = 1L;
+	private int id;
+	private int depId;
+	private int abstention;
+	private int dfinal;
+	private int good;
+	private int nomal;
+	private int number;
+	private int state;
+	private int top;
+	private int weak;
+	private int year;
+	private int staId;
+
+	public StaffDemocracy() {
+	}
+
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="SDem_ID")
+	public int getId() {
+		return this.id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	@Column(name="Dep_ID")
+	public int getDepId() {
+		return this.depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+
+	@Column(name="SDem_abstention")
+	public int getAbstention() {
+		return this.abstention;
+	}
+
+	public void setAbstention(int abstention) {
+		this.abstention = abstention;
+	}
+
+
+	@Column(name="SDem_final")
+	public int getDfinal() {
+		return this.dfinal;
+	}
+
+	public void setDfinal(int SDem_final) {
+		this.dfinal = SDem_final;
+	}
+
+
+	@Column(name="SDem_good")
+	public int getGood() {
+		return this.good;
+	}
+
+	public void setGood(int good) {
+		this.good = good;
+	}
+
+
+	@Column(name="SDem_nomal")
+	public int getNomal() {
+		return this.nomal;
+	}
+
+	public void setNomal(int nomal) {
+		this.nomal = nomal;
+	}
+
+
+	@Column(name="SDem_number")
+	public int getNumber() {
+		return this.number;
+	}
+
+	public void setNumber(int number) {
+		this.number = number;
+	}
+
+
+	@Column(name="SDem_state")
+	public int getState() {
+		return this.state;
+	}
+
+	public void setState(int state) {
+		this.state = state;
+	}
+
+
+	@Column(name="SDem_top")
+	public int getTop() {
+		return this.top;
+	}
+
+	public void setTop(int top) {
+		this.top = top;
+	}
+
+
+	@Column(name="SDem_weak")
+	public int getWeak() {
+		return this.weak;
+	}
+
+	public void setWeak(int weak) {
+		this.weak = weak;
+	}
+
+
+	@Column(name="SDem_year")
+	public int getYear() {
+		return this.year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+
+	@Column(name="Sta_ID")
+	public int getStaId() {
+		return this.staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+}

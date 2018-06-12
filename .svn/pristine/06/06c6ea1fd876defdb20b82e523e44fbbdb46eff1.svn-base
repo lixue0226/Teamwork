@@ -1,0 +1,259 @@
+<#import "layout/layout_staff.html" as layout />
+
+<#macro header>
+<link rel="stylesheet" href="${rc.contextPath}/plugins/datetimepicker/css/bootstrap-datetimepicker.min.css">
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript" src="${rc.contextPath}/plugins/datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="${rc.contextPath}/plugins/datetimepicker/js/locales/bootstrap-datetimepicker.zh-CN.js"></script>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		q : {
+			username : ""
+		},
+		title : null,
+		disabled : false,
+		user : {
+			status : 1
+		},
+		sexs : [
+			{id:1,name:"男"},
+			{id:2,name:"女"}
+		]
+	}
+);
+methods = $.extend(
+	methods,{
+		reload: function(){
+			var page = $("#jqGrid").jqGrid('getGridParam','page');
+			$("#jqGrid").jqGrid('setGridParam',{ 
+                postData:{'username': vm.q.username},
+                page:page
+            }).trigger("reloadGrid");
+		},
+		query: function () {
+			vm.reload();
+		},
+		add: function(){
+			vm.title = "新增人员基本信息";
+			vm.user = {};
+			vm.disabled = false;
+			
+			vm.dialog();
+		},
+		update: function(id){
+			vm.title = "修改人员基本信息";
+			vm.disabled = true;
+			vm.get(id);
+		},
+		del: function(id){
+			var ids = null;
+			if(id != null || id != undefined){
+				ids = [];
+				ids.push(id);
+			} else {
+				ids = getSelectedRows();
+			}
+			if(ids == null){
+				alert("请先选择删除的行!")
+				return ;
+			}
+			confirm('确定要删除选中的记录？', function(){
+				$.ajax({
+					type: "POST",
+				    url: baseURL + "/api/department/staff/delete",
+	                contentType: "application/json",
+				    data: JSON.stringify(ids),
+				    success: function(r){
+						if(r.code == 0){
+							alert('删除成功', function(){
+	                            vm.reload();
+							});
+						}else{
+							alert(r.msg);
+						}
+					}
+				});
+			
+			});
+		},
+		get: function(id){
+			$.get(baseURL + "/api/department/staff/info/"+id, function(result){
+				vm.user = result.data;
+				vm.dialog();
+			});
+		},
+		dialog: function(){
+			layer.open({
+				type: 1,
+				skin: 'layui-layer-molv',
+				title: vm.title,
+				area: ['580px', '580px'],
+				shadeClose: false,
+				content: jQuery("#formLayer"),
+				btn: ['确定','取消'],
+				btn1: function (index) {
+					vm.user.born = $("#born").val();
+					vm.user.joinParty = $("#joinParty").val();
+					vm.user.joinJob = $("#joinJob").val();
+					
+					$.ajax({
+						type: "POST",
+					    url: baseURL + "/api/department/staff/save",
+					    data: JSON.stringify(vm.user),
+					    dataType: "json",
+					    contentType : 'application/json',
+					    success: function(r){
+							if(r.code == 0){
+								layer.close(index);
+								alert(r.msg);
+								vm.reload();
+							}else{
+								alert(r.msg);
+							}
+						}
+					});
+	            }
+			});
+		}
+	}
+);
+
+$(function(){
+	$("#jqGrid").jqGrid({
+        url: baseURL + '/api/department/staff/list',
+        datatype: "json",
+        colModel: [			
+			{ label: '用户ID', name: 'id', index: "id", width: 75, key: true, sortable: false },
+			{ label: '姓名', name: 'name', width: 45, sortable: false },
+			{ label: '身份证号', name: 'cardId', width: 100, sortable: false },
+			{ label: '性别', name: 'sex', width: 40, sortable: false, formatter:function(value, options, row){
+				return ['','男','女'][value];
+			} },
+			{ label: '出生日期', name: 'born', width: 90, sortable: false },
+			{ label: '民族', name: 'nationality', width: 40, sortable: false },
+			// { label: '籍贯', name: 'origin', width: 90, sortable: false },
+			// { label: '出生地', name: 'place', width: 90, sortable: false },
+			{ label: '入党时间', name: 'joinParty', width: 50, sortable: false },
+			{ label: '参加工作时间', name: 'joinJob', width: 50, sortable: false },
+			/*
+			{ label: '操作', name: 'id', index: "id", width: 120, sortable: false, formatter: function(value, options, row){
+				return '<a class="btn btn-primary" onclick="vm.update('+value+')"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>&nbsp;' + 
+						'<a class="btn btn-primary" onclick="vm.del('+value+')"><i class="fa fa-trash-o"></i>&nbsp;删除</a>&nbsp;' + 
+						'<a class="btn btn-primary" href="${rc.contextPath}/manage/department/staff/'+value+'" target="blank"><i class="fa fa-trash-o"></i>&nbsp;详细</a>';
+			}},
+			*/
+        ],
+		viewrecords: false,
+        height: 485,
+        rowNum: 10,
+		rowList : [10,30,50],
+        rownumbers: true, 
+        rownumWidth: 25, 
+        autowidth:true,
+        multiselect: true,
+        pager: "#jqGridPager",
+        sortable: false,
+        jsonReader : {
+            root: "page.list",
+            page: "page.currPage",
+            total: "page.totalPage",
+            records: "page.totalCount"
+        },
+        prmNames : {
+            page:"page", 
+            rows:"limit", 
+            order: "order"
+        },
+        gridComplete:function(){
+        	//隐藏grid底部滚动条
+        	$("#jqGrid").closest(".ui-jqgrid-bdiv").css({ "overflow-x" : "hidden" }); 
+        }
+    });
+	
+	$('.datetimepicker').datetimepicker({
+		minView: "month",
+		language:  'zh-CN',
+		autoclose: true,
+	    format: 'yyyy/mm/dd'
+	});
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="人员管理" contentLevel="人员考核" pageTitle="人员管理" contentDesc="">
+<div class="grid-btn">
+	<div class="form-group col-sm-2">
+		<input type="text" class="form-control" v-model="q.username" @keyup.enter="query" placeholder="用户名">
+	</div>
+	<a class="btn btn-default" @click="query">查询</a>
+	<a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+	<a class="btn btn-primary" onclick="vm.del()"><i class="fa fa-trash-o"></i>&nbsp;批量删除</a>
+</div>
+<table id="jqGrid"></table>
+<div id="jqGridPager"></div>
+<div id="formLayer" style="display: none;">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">姓名</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="user.name" placeholder="姓名"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">身份证号</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="user.cardId" placeholder="身份证号"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">性别</div>
+		   	<div class="col-sm-10">
+		   		<label v-for="sex in sexs" class="checkbox-inline">
+				  <input type="radio" name="sex" :value="sex.id" v-model="user.sex">{{sex.name}}
+				</label>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label ">出生日期</div>
+		   	<div class="col-sm-10">
+		      <input type="text" id="born" class="form-control datetimepicker" v-model="user.born" placeholder="出生日期"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">民族</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="user.nationality" placeholder="民族"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">籍贯</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="user.origin" placeholder="籍贯"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">出生地</div>
+		   	<div class="col-sm-10">
+		      <input type="text" class="form-control" v-model="user.place" placeholder="出生地"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">入党时间</div>
+		   	<div class="col-sm-10">
+		      <input type="text" id="joinParty" class="form-control datetimepicker" v-model="user.joinParty" placeholder="入党时间"/>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">参加工作时间</div>
+		   	<div class="col-sm-10">
+		      <input type="text" id="joinJob" class="form-control datetimepicker" v-model="user.joinJob" placeholder="参加工作时间"/>
+		    </div>
+		</div>
+	</form>
+</div>
+</@layout.doContent>

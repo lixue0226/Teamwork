@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+	<persistence-unit name="check">
+		<class>com.ewaytek.model.Permission</class>
+		<class>com.ewaytek.model.Role</class>
+		<class>com.ewaytek.model.User</class>
+		<class>com.ewaytek.model.Department</class>
+		<class>com.ewaytek.model.DepartmentComment</class>
+		<class>com.ewaytek.model.DepartmentDemocracy</class>
+		<class>com.ewaytek.model.DepartmentEvaluation</class>
+		<class>com.ewaytek.model.DepartmentProcess</class>
+		<class>com.ewaytek.model.DepartmentTree</class>
+		<class>com.ewaytek.model.Advertisement</class>
+		<class>com.ewaytek.model.Notice</class>
+		<class>com.ewaytek.model.Staff</class>
+		<class>com.ewaytek.model.StaffActivity</class>
+		<class>com.ewaytek.model.StaffComment</class>
+		<class>com.ewaytek.model.StaffDemocracy</class>
+		<class>com.ewaytek.model.StaffEvaluation</class>
+		<class>com.ewaytek.model.StaffLayer</class>
+		<class>com.ewaytek.model.StaffProcess</class>
+		<class>com.ewaytek.model.StaffRelation</class>
+		<class>com.ewaytek.model.StaffResume</class>
+		<class>com.ewaytek.model.StaffRewardsPunishment</class>
+	</persistence-unit>
+</persistence>

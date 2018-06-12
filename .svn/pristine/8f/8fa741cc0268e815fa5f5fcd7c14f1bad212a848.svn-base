@@ -1,0 +1,92 @@
+<#import "layout/layout_staff_info.html" as layout />
+
+<#macro header>
+</#macro>
+<#assign header=header in layout />
+
+<#macro footer>
+<script type="text/javascript">
+data = $.extend(
+	data,{
+		
+	}
+);
+methods = $.extend(
+	methods,{
+		
+	}
+);
+
+$(function(){
+	
+});
+</script>
+</#macro>
+<#assign footer=footer in layout />
+
+<@layout.doContent contentHeader="员工信息(${staff.name})" contentLevel="人员管理" pageTitle="员工管理" contentDesc="">
+<div id="formLayer">
+	<form class="form-horizontal">
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">员工编号</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.id?c}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">姓名</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.name}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">身份证号</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.cardId}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">性别</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;"><#if staff.sex == 1>男<#elseif staff.sex == 2>女</#if></span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">出生日期</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.born}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">民族</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.nationality}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">籍贯</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.origin}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">出生地</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.place}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">入党时间</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.joinParty}</span>
+		    </div>
+		</div>
+		<div class="form-group">
+		   	<div class="col-sm-2 control-label">参加工作时间</div>
+		   	<div class="col-sm-10">
+		       	<span class="form-control" style="border:0px;">${staff.joinJob}</span>
+		    </div>
+		</div>
+	</form>
+</div>
+</@layout.doContent>

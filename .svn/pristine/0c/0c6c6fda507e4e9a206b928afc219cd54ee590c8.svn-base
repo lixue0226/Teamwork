@@ -1,0 +1,31 @@
+package com.ewaytek.repository;
+
+import java.util.Date;
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ewaytek.model.DepartmentProcess;
+import com.ewaytek.model.DepartmentTree;
+import com.ewaytek.model.pojo.DepartmentTreeEx;
+
+public interface DepartmentTreeRepository extends JpaRepository<DepartmentTree, Integer>, JpaSpecificationExecutor<DepartmentTree> {
+
+	// Path expected for join
+	// @Query(value="select new com.ewaytek.model.pojo.DepartmentTreeEx(d.id, d.name, t.IsEvaluation,t.IsShowLevel,t.reason,t.type) from DepartmentTree t left join Department d with d.id = t.depId where t.year = :year")
+	@Query(value="select new com.ewaytek.model.pojo.DepartmentTreeEx(d.id, d.name, t.IsEvaluation,t.IsShowLevel,t.reason,t.type) from DepartmentTree t , Department d where d.id = t.depId and t.year = :year")
+	List<DepartmentTreeEx> findTreeByYear(@Param("year") Integer year);
+	
+	@Modifying(clearAutomatically=true)
+	@Query("delete from DepartmentTree t where t.year = :year")
+	@Transactional
+	void deleteTreeByYear(@Param("year") Integer year);
+
+	@Query("select new com.ewaytek.model.pojo.DepartmentTreeEx(d.id, d.name, 1,0,0,0) from Department d where d.id not in (select t.depId from DepartmentTree t where t.year = :year)")
+	List<DepartmentTreeEx> findNoTreeByYear(@Param("year") Integer year);
+}

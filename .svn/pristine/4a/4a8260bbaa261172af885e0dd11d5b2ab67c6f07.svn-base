@@ -1,0 +1,86 @@
+package com.ewaytek.model;
+
+import java.io.Serializable;
+import javax.persistence.*;
+import java.util.List;
+
+
+/**
+ * The persistent class for the sys_role database table.
+ * 
+ */
+@Entity
+@Table(name="sys_role")
+@NamedQuery(name="Role.findAll", query="SELECT r FROM Role r")
+public class Role implements Serializable {
+	private static final long serialVersionUID = 1L;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private String id;
+
+	private String name;
+
+	private String type;
+
+	//bi-directional many-to-many association to Permission
+	@ManyToMany
+	@JoinTable(
+		name="sys_role_permission"
+		, joinColumns={
+			@JoinColumn(name="rid")
+			}
+		, inverseJoinColumns={
+			@JoinColumn(name="pid")
+			}
+		)
+	private List<Permission> sysPermissions;
+
+	//bi-directional many-to-many association to User
+	@ManyToMany(mappedBy="sysRoles")
+	private List<User> sysUsers;
+
+	public Role() {
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getType() {
+		return this.type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public List<Permission> getSysPermissions() {
+		return this.sysPermissions;
+	}
+
+	public void setSysPermissions(List<Permission> sysPermissions) {
+		this.sysPermissions = sysPermissions;
+	}
+
+	public List<User> getSysUsers() {
+		return this.sysUsers;
+	}
+
+	public void setSysUsers(List<User> sysUsers) {
+		this.sysUsers = sysUsers;
+	}
+
+}

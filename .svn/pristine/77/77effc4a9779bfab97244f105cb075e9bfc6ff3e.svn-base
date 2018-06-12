@@ -1,0 +1,173 @@
+package com.ewaytek.model.pojo;
+
+import java.io.Serializable;
+import javax.persistence.*;
+
+
+/**
+ * The persistent class for the staff_democracy database table.
+ * 
+ */
+public class StaffDemocracyEx implements Serializable {
+	private int id;
+	private int depId;
+	private int abstention;
+	private int dfinal;
+	private int good;
+	private int nomal;
+	private int number;
+	private int state;
+	private int top;
+	private int weak;
+	private int year;
+	private int staId;
+	private String staName;
+	private String message;
+
+	public StaffDemocracyEx(){
+		
+	}
+	
+	public StaffDemocracyEx(
+			int id,
+			int depId,
+			int abstention,
+			int dfinal,
+			int good,
+			int nomal,
+			int number,
+			int state,
+			int top,
+			int weak,
+			int year,
+			int staId,
+			String staName
+		) {
+		this.id = id;
+		this.depId = depId;
+		this.abstention = abstention;
+		this.dfinal = dfinal;
+		this.good = good;
+		this.nomal = nomal;
+		this.number = number;
+		this.state = state;
+		this.top = top;
+		this.weak = weak;
+		this.year = year;
+		this.staId = staId;
+		this.staName = staName;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public int getDepId() {
+		return depId;
+	}
+
+	public void setDepId(int depId) {
+		this.depId = depId;
+	}
+
+	public int getAbstention() {
+		return abstention;
+	}
+
+	public void setAbstention(int abstention) {
+		this.abstention = abstention;
+	}
+
+	public int getDfinal() {
+		return dfinal;
+	}
+
+	public void setDfinal(int dfinal) {
+		this.dfinal = dfinal;
+	}
+
+	public int getGood() {
+		return good;
+	}
+
+	public void setGood(int good) {
+		this.good = good;
+	}
+
+	public int getNomal() {
+		return nomal;
+	}
+
+	public void setNomal(int nomal) {
+		this.nomal = nomal;
+	}
+
+	public int getNumber() {
+		return number;
+	}
+
+	public void setNumber(int number) {
+		this.number = number;
+	}
+
+	public int getState() {
+		return state;
+	}
+
+	public void setState(int state) {
+		this.state = state;
+	}
+
+	public int getTop() {
+		return top;
+	}
+
+	public void setTop(int top) {
+		this.top = top;
+	}
+
+	public int getWeak() {
+		return weak;
+	}
+
+	public void setWeak(int weak) {
+		this.weak = weak;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getStaId() {
+		return staId;
+	}
+
+	public void setStaId(int staId) {
+		this.staId = staId;
+	}
+
+	public String getStaName() {
+		return staName;
+	}
+
+	public void setStaName(String staName) {
+		this.staName = staName;
+	}
+
+}

@@ -1,0 +1,45 @@
+`
+<aside class="main-sidebar">
+	<section class="sidebar">
+		<ul class="sidebar-menu">
+			<li class="treeview">
+				<a href="${rc.contentPath}/manage/dashboard">
+					<i class="fa fa-dashboard"></i> 
+					<span>图书管理系统</span> 
+				</a>
+			</li> 
+			
+			<#if user.type == 1>
+			<li class="treeview">
+				<a href="#">
+					<i class="fa fa-link"></i>
+					<span>图书管理系统(管理员)</span>
+					<span class="pull-right-container">
+						<i class="fa fa-angle-left pull-right"></i>
+					</span> 
+				</a>
+				<ul class="treeview-menu">
+					<li><a href="${rc.contextPath}/manage/managestudent"><i
+							class="fa fa-link"></i> <span>学生信息管理</span></a></li>
+					<li><a href="${rc.contextPath}/manage/managebook"><i
+							class="fa fa-link"></i> <span>图书信息管理</span></a></li>
+
+				</ul></li> <#elseif user.type == 0>
+			<li class="treeview"><a href="#"><i class="fa fa-link"></i>
+					<span>图书管理系统(学生端)</span> <span class="pull-right-container">
+						<i class="fa fa-angle-left pull-right"></i>
+				</span> </a>
+				<ul class="treeview-menu">
+					<li><a href="${rc.contextPath}/manage/findbook"><i
+							class="fa fa-link"></i> <span>查阅图书信息</span></a></li>
+				</ul>
+				<ul class="treeview-menu">
+					<li><a href="${rc.contextPath}/manage/student"><i
+							class="fa fa-link"></i> <span>个人信息</span></a></li>
+				</ul></li> </#if>
+		</ul>
+
+	</section>
+
+</aside>
+

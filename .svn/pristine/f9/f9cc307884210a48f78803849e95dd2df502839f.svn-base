@@ -1,0 +1,33 @@
+package com.ewaytek.propery;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+
+@Configuration
+@PropertySource(value="classpath:config/site.properties", encoding="utf-8")
+public class SiteProperty {
+
+	@Value("${site.title}")
+    public String title;
+	
+	@Value("${site.title.mini}")
+	public String mini_title;
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getMini_title() {
+		return mini_title;
+	}
+
+	public void setMini_title(String mini_title) {
+		this.mini_title = mini_title;
+	}
+
+}
